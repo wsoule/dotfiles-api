@@ -34,10 +34,6 @@ go mod tidy
 go run main.go
 ```
 
-Or from the parent directory:
-```bash
-go run -C dotfiles-web main.go
-```
 
 Server will start on http://localhost:8080
 
