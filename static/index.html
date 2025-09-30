@@ -3,305 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dotfiles Config Sharing</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: #f5f5f5;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .header h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-
-        .stat-card h3 {
-            color: #7f8c8d;
-            font-size: 14px;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-        }
-
-        .stat-card .number {
-            font-size: 32px;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-
-        .search-box {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ecf0f1;
-            border-radius: 6px;
-            font-size: 16px;
-        }
-
-        .search-box input:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-
-        .configs-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
-        }
-
-        .config-card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            overflow: hidden;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .config-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        .config-header {
-            padding: 20px;
-            border-bottom: 1px solid #ecf0f1;
-        }
-
-        .config-header h3 {
-            color: #2c3e50;
-            margin-bottom: 8px;
-        }
-
-        .config-header .author {
-            color: #7f8c8d;
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-
-        .config-header .description {
-            color: #5a6c7d;
-            font-size: 14px;
-        }
-
-        .config-tags {
-            padding: 15px 20px;
-            border-bottom: 1px solid #ecf0f1;
-        }
-
-        .tag {
-            display: inline-block;
-            background: #ecf0f1;
-            color: #2c3e50;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-right: 8px;
-            margin-bottom: 4px;
-        }
-
-        .config-packages {
-            padding: 15px 20px;
-        }
-
-        .package-group {
-            margin-bottom: 10px;
-        }
-
-        .package-group strong {
-            color: #2c3e50;
-            font-size: 12px;
-            text-transform: uppercase;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .package-list {
-            color: #7f8c8d;
-            font-size: 13px;
-            word-break: break-all;
-        }
-
-        .config-footer {
-            padding: 15px 20px;
-            background: #f8f9fa;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 12px;
-            color: #7f8c8d;
-        }
-
-        .download-btn {
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 12px;
-            margin-left: 8px;
-        }
-
-        .download-btn:hover {
-            background: #2980b9;
-        }
-
-        .copy-command {
-            background: #27ae60;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-right: 8px;
-        }
-
-        .copy-command:hover {
-            background: #229954;
-        }
-
-        .copy-command.copied {
-            background: #16a085;
-        }
-
-        .command-container {
-            background: #2c3e50;
-            color: #ecf0f1;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 11px;
-            margin: 8px 0;
-            word-break: break-all;
-            border: 1px solid #34495e;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #7f8c8d;
-        }
-
-        .empty {
-            text-align: center;
-            padding: 60px 20px;
-            color: #7f8c8d;
-        }
-
-        .empty h3 {
-            margin-bottom: 10px;
-            color: #2c3e50;
-        }
-
-        .upload-instructions {
-            margin-top: 20px;
-            text-align: left;
-        }
-
-        .upload-instructions details {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 6px;
-            padding: 15px;
-        }
-
-        .upload-instructions summary {
-            cursor: pointer;
-            font-weight: bold;
-            color: #2c3e50;
-            padding: 5px 0;
-        }
-
-        .upload-instructions summary:hover {
-            color: #3498db;
-        }
-
-        .instructions-content {
-            margin-top: 15px;
-            line-height: 1.6;
-        }
-
-        .instructions-content h3 {
-            color: #2c3e50;
-            margin: 15px 0 8px 0;
-            font-size: 16px;
-        }
-
-        .instructions-content h3:first-child {
-            margin-top: 0;
-        }
-
-        .instructions-content p {
-            margin: 5px 0;
-            color: #555;
-        }
-
-        .instructions-content code {
-            background: #2c3e50;
-            color: #ecf0f1;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 12px;
-            display: block;
-            margin: 8px 0;
-            white-space: pre-wrap;
-            overflow-x: auto;
-        }
-    </style>
+    <title>Dotfiles Config & Template Sharing</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🚀 Dotfiles Config Sharing</h1>
-            <p>Discover and share development environment configurations</p>
+            <p>Discover and share development environment configurations and templates</p>
+        </div>
 
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('configs')">📁 Configurations</button>
+            <button class="nav-tab" onclick="switchTab('templates')">📋 Templates</button>
+            <button class="nav-tab" onclick="switchTab('create-template')">➕ Create Template</button>
+        </div>
+
+        <!-- Configurations Section -->
+        <div id="configs-section" class="content-section active">
             <div class="upload-instructions">
                 <details>
                     <summary>📤 How to Upload Your Config</summary>
@@ -312,14 +31,14 @@
 
                         <h3>2. Share via API</h3>
                         <p>Upload directly using the API:</p>
-                        <code>curl -X POST ${window.location.origin}/api/configs/upload \<br>
-  -H "Content-Type: application/json" \<br>
+                        <code>curl -X POST ${window.location.origin}/api/configs/upload \
+  -H "Content-Type: application/json" \
   -d '{
     "name": "My Configuration",
     "description": "Description of my setup",
     "author": "Your Name",
     "tags": ["web-dev", "python"],
-    "config": "{\\"brews\\": [\\"git\\", \\"curl\\"], \\"casks\\": [\\"vscode\\"], \\"taps\\": [], \\"stow\\": [\\"vim\\"]}",
+    "config": "{\"brews\": [\"git\", \"curl\"], \"casks\": [\"vscode\"], \"taps\": [], \"stow\": [\"vim\"]}",
     "public": true
   }'</code>
 
@@ -329,217 +48,137 @@
                     </div>
                 </details>
             </div>
+
+            <div class="stats" id="stats">
+                <div class="stat-card">
+                    <h3>Total Configs</h3>
+                    <div class="number" id="total-configs">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Public Configs</h3>
+                    <div class="number" id="public-configs">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Downloads</h3>
+                    <div class="number" id="total-downloads">-</div>
+                </div>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="search" placeholder="Search configurations by name, description, or tags...">
+            </div>
+
+            <div id="configs-container">
+                <div class="loading">Loading configurations...</div>
+            </div>
         </div>
 
-        <div class="stats" id="stats">
-            <div class="stat-card">
-                <h3>Total Configs</h3>
-                <div class="number" id="total-configs">-</div>
+        <!-- Templates Section -->
+        <div id="templates-section" class="content-section">
+            <div class="search-box">
+                <input type="text" id="template-search" placeholder="Search templates by name, description, or tags...">
+                <br><br>
+                <div class="form-row">
+                    <div class="form-group">
+                        <input type="text" id="template-tags" placeholder="Filter by tags (comma-separated)">
+                    </div>
+                    <div class="form-group">
+                        <select id="template-featured">
+                            <option value="">All Templates</option>
+                            <option value="true">Featured Only</option>
+                            <option value="false">Non-Featured Only</option>
+                        </select>
+                    </div>
+                </div>
             </div>
-            <div class="stat-card">
-                <h3>Public Configs</h3>
-                <div class="number" id="public-configs">-</div>
-            </div>
-            <div class="stat-card">
-                <h3>Total Downloads</h3>
-                <div class="number" id="total-downloads">-</div>
+
+            <div id="templates-container">
+                <div class="loading">Loading templates...</div>
             </div>
         </div>
 
-        <div class="search-box">
-            <input type="text" id="search" placeholder="Search configurations by name, description, or tags...">
-        </div>
+        <!-- Create Template Section -->
+        <div id="create-template-section" class="content-section">
+            <div class="template-form">
+                <h2>Create New Template</h2>
+                <form id="template-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="template-name">Name*</label>
+                            <input type="text" id="template-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="template-author">Author*</label>
+                            <input type="text" id="template-author" required>
+                        </div>
+                    </div>
 
-        <div id="configs-container">
-            <div class="loading">Loading configurations...</div>
+                    <div class="form-group">
+                        <label for="template-description">Description</label>
+                        <textarea id="template-description"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="template-version">Version</label>
+                            <input type="text" id="template-version" placeholder="1.0.0">
+                        </div>
+                        <div class="form-group">
+                            <label for="template-tags-input">Tags (comma-separated)</label>
+                            <input type="text" id="template-tags-input" placeholder="web-dev, frontend, backend">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="template-brews">Homebrew Packages (comma-separated)</label>
+                            <textarea id="template-brews" placeholder="git, node, python3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="template-casks">Homebrew Casks (comma-separated)</label>
+                            <textarea id="template-casks" placeholder="visual-studio-code, google-chrome"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="template-taps">Homebrew Taps (comma-separated)</label>
+                            <input type="text" id="template-taps" placeholder="homebrew/cask-fonts">
+                        </div>
+                        <div class="form-group">
+                            <label for="template-stow">Stow Packages (comma-separated)</label>
+                            <input type="text" id="template-stow" placeholder="vim, git, zsh">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="template-extends">Extends Template ID</label>
+                            <input type="text" id="template-extends" placeholder="base-template">
+                        </div>
+                        <div class="form-group">
+                            <label for="template-overrides">Overrides (comma-separated)</label>
+                            <input type="text" id="template-overrides" placeholder="brews, casks">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="template-public" checked>
+                            <label for="template-public">Public Template</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="template-add-only">
+                            <label for="template-add-only">Add Only (Don't Replace)</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Create Template</button>
+                </form>
+            </div>
         </div>
     </div>
 
-    <script>
-        let allConfigs = [];
-
-        // Load stats
-        async function loadStats() {
-            try {
-                const response = await fetch('/api/configs/stats');
-                const stats = await response.json();
-
-                document.getElementById('total-configs').textContent = stats.total_configs || 0;
-                document.getElementById('public-configs').textContent = stats.public_configs || 0;
-                document.getElementById('total-downloads').textContent = stats.total_downloads || 0;
-            } catch (error) {
-                console.error('Failed to load stats:', error);
-            }
-        }
-
-        // Load all configurations
-        async function loadConfigs() {
-            try {
-                const response = await fetch('/api/configs/search');
-                const data = await response.json();
-                allConfigs = data.items || [];
-                displayConfigs(allConfigs);
-            } catch (error) {
-                console.error('Failed to load configs:', error);
-                document.getElementById('configs-container').innerHTML =
-                    '<div class="empty"><h3>Failed to load configurations</h3><p>Please try again later.</p></div>';
-            }
-        }
-
-        // Display configurations
-        function displayConfigs(configs) {
-            const container = document.getElementById('configs-container');
-
-            if (configs.length === 0) {
-                container.innerHTML = '<div class="empty"><h3>No configurations found</h3><p>Be the first to share your dotfiles configuration!</p></div>';
-                return;
-            }
-
-            const grid = document.createElement('div');
-            grid.className = 'configs-grid';
-
-            configs.forEach(async (item) => {
-                try {
-                    // Fetch full config details
-                    const configResponse = await fetch(item.html_url);
-                    const config = await configResponse.json();
-
-                    const card = createConfigCard(config, item);
-                    grid.appendChild(card);
-                } catch (error) {
-                    console.error('Failed to load config details:', error);
-                }
-            });
-
-            container.innerHTML = '';
-            container.appendChild(grid);
-        }
-
-        // Create configuration card
-        function createConfigCard(config, item) {
-            const card = document.createElement('div');
-            card.className = 'config-card';
-
-            const packages = {
-                brews: config.brews || [],
-                casks: config.casks || [],
-                taps: config.taps || [],
-                stow: config.stow || []
-            };
-
-            const totalPackages = packages.brews.length + packages.casks.length + packages.taps.length + packages.stow.length;
-
-            card.innerHTML = `
-                <div class="config-header">
-                    <h3>${config.metadata?.name || 'Unnamed Configuration'}</h3>
-                    <div class="author">by ${config.metadata?.author || item.owner?.login || 'Anonymous'}</div>
-                    <div class="description">${config.metadata?.description || 'No description provided'}</div>
-                </div>
-                ${config.metadata?.tags?.length ? `
-                <div class="config-tags">
-                    ${config.metadata.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-                </div>` : ''}
-                <div class="config-packages">
-                    ${packages.brews.length ? `
-                    <div class="package-group">
-                        <strong>🍺 Brews (${packages.brews.length})</strong>
-                        <div class="package-list">${packages.brews.slice(0, 10).join(', ')}${packages.brews.length > 10 ? '...' : ''}</div>
-                    </div>` : ''}
-                    ${packages.casks.length ? `
-                    <div class="package-group">
-                        <strong>📦 Casks (${packages.casks.length})</strong>
-                        <div class="package-list">${packages.casks.slice(0, 10).join(', ')}${packages.casks.length > 10 ? '...' : ''}</div>
-                    </div>` : ''}
-                    ${packages.taps.length ? `
-                    <div class="package-group">
-                        <strong>📋 Taps (${packages.taps.length})</strong>
-                        <div class="package-list">${packages.taps.join(', ')}</div>
-                    </div>` : ''}
-                    ${packages.stow.length ? `
-                    <div class="package-group">
-                        <strong>🔗 Stow (${packages.stow.length})</strong>
-                        <div class="package-list">${packages.stow.join(', ')}</div>
-                    </div>` : ''}
-                    ${totalPackages === 0 ? '<div class="package-list">No packages defined</div>' : ''}
-                </div>
-                <div class="command-container">
-                    <strong>📋 Import Command:</strong><br>
-                    <code id="command-${item.id}">dotfiles clone ${window.location.origin}${item.html_url}</code>
-                </div>
-                <div class="config-footer">
-                    <span>${new Date(config.metadata?.created_at || item.created_at).toLocaleDateString()}</span>
-                    <button class="copy-command" onclick="copyCommand('${item.id}')">Copy Command</button>
-                    <a href="${item.html_url}" class="download-btn" target="_blank">Raw JSON</a>
-                </div>
-            `;
-
-            return card;
-        }
-
-        // Copy command functionality
-        function copyCommand(configId) {
-            const commandElement = document.getElementById(`command-${configId}`);
-            const command = commandElement.textContent;
-
-            navigator.clipboard.writeText(command).then(() => {
-                // Find the button and update its appearance
-                const button = event.target;
-                const originalText = button.textContent;
-                button.textContent = '✓ Copied!';
-                button.classList.add('copied');
-
-                setTimeout(() => {
-                    button.textContent = originalText;
-                    button.classList.remove('copied');
-                }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy command:', err);
-                // Fallback for browsers that don't support clipboard API
-                const textArea = document.createElement('textarea');
-                textArea.value = command;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-
-                const button = event.target;
-                const originalText = button.textContent;
-                button.textContent = '✓ Copied!';
-                button.classList.add('copied');
-
-                setTimeout(() => {
-                    button.textContent = originalText;
-                    button.classList.remove('copied');
-                }, 2000);
-            });
-        }
-
-        // Search functionality
-        document.getElementById('search').addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase();
-
-            if (!query) {
-                displayConfigs(allConfigs);
-                return;
-            }
-
-            const filtered = allConfigs.filter(item => {
-                const searchText = (item.description || '').toLowerCase();
-                return searchText.includes(query);
-            });
-
-            displayConfigs(filtered);
-        });
-
-        // Initialize
-        loadStats();
-        loadConfigs();
-
-        // Polling disabled
-        // setInterval(() => {
-        //     loadStats();
-        //     loadConfigs();
-        // }, 30000);
-    </script>
+    <script src="/static/app.js"></script>
 </body>
 </html>

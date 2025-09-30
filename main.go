@@ -39,6 +39,27 @@ type ShareMetadata struct {
 	Version     string    `json:"version"`
 }
 
+type Template struct {
+	Taps      []string         `json:"taps"`
+	Brews     []string         `json:"brews"`
+	Casks     []string         `json:"casks"`
+	Stow      []string         `json:"stow"`
+	Metadata  ShareMetadata    `json:"metadata"`
+	Extends   string           `json:"extends,omitempty"`
+	Overrides []string         `json:"overrides,omitempty"`
+	AddOnly   bool             `json:"addOnly"`
+	Public    bool             `json:"public"`
+	Featured  bool             `json:"featured"`
+}
+
+type StoredTemplate struct {
+	ID           string        `json:"id" bson:"_id"`
+	Template     Template      `json:"template" bson:"template"`
+	CreatedAt    time.Time     `json:"created_at" bson:"created_at"`
+	UpdatedAt    time.Time     `json:"updated_at" bson:"updated_at"`
+	Downloads    int           `json:"downloads" bson:"downloads"`
+}
+
 type StoredConfig struct {
 	ID           string          `json:"id" bson:"_id"`
 	Config       ShareableConfig `json:"config" bson:"config"`
@@ -56,15 +77,25 @@ type ConfigStorage interface {
 	IncrementDownloads(id string) error
 }
 
+// Template storage interface
+type TemplateStorage interface {
+	StoreTemplate(template *StoredTemplate) error
+	GetTemplate(id string) (*StoredTemplate, error)
+	SearchTemplates(search, tags string, featured *bool) ([]*StoredTemplate, error)
+	IncrementTemplateDownloads(id string) error
+}
+
 // In-memory storage (fallback)
 type MemoryStorage struct {
-	configs map[string]*StoredConfig
-	mu      sync.RWMutex
+	configs   map[string]*StoredConfig
+	templates map[string]*StoredTemplate
+	mu        sync.RWMutex
 }
 
 func NewMemoryStorage() *MemoryStorage {
 	return &MemoryStorage{
-		configs: make(map[string]*StoredConfig),
+		configs:   make(map[string]*StoredConfig),
+		templates: make(map[string]*StoredTemplate),
 	}
 }
 
@@ -135,9 +166,91 @@ func (m *MemoryStorage) IncrementDownloads(id string) error {
 	return nil
 }
 
+// Template methods for MemoryStorage
+func (m *MemoryStorage) StoreTemplate(template *StoredTemplate) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.templates[template.ID] = template
+	return nil
+}
+
+func (m *MemoryStorage) GetTemplate(id string) (*StoredTemplate, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	template, exists := m.templates[id]
+	if !exists {
+		return nil, fmt.Errorf("template not found")
+	}
+	return template, nil
+}
+
+func (m *MemoryStorage) SearchTemplates(search, tags string, featured *bool) ([]*StoredTemplate, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	var results []*StoredTemplate
+	searchLower := strings.ToLower(search)
+	var tagsList []string
+	if tags != "" {
+		tagsList = strings.Split(strings.ToLower(tags), ",")
+	}
+
+	for _, template := range m.templates {
+		// Filter by public status
+		if !template.Template.Public {
+			continue
+		}
+
+		// Filter by featured if specified
+		if featured != nil && template.Template.Featured != *featured {
+			continue
+		}
+
+		// Search in name and description
+		if search != "" {
+			searchText := strings.ToLower(template.Template.Metadata.Name + " " + template.Template.Metadata.Description)
+			if !strings.Contains(searchText, searchLower) {
+				continue
+			}
+		}
+
+		// Filter by tags if specified
+		if len(tagsList) > 0 {
+			tagMatch := false
+			for _, templateTag := range template.Template.Metadata.Tags {
+				for _, searchTag := range tagsList {
+					if strings.Contains(strings.ToLower(templateTag), strings.TrimSpace(searchTag)) {
+						tagMatch = true
+						break
+					}
+				}
+				if tagMatch {
+					break
+				}
+			}
+			if !tagMatch {
+				continue
+			}
+		}
+
+		results = append(results, template)
+	}
+	return results, nil
+}
+
+func (m *MemoryStorage) IncrementTemplateDownloads(id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if template, exists := m.templates[id]; exists {
+		template.Downloads++
+	}
+	return nil
+}
+
 // MongoDB storage
 type MongoStorage struct {
-	collection *mongo.Collection
+	collection         *mongo.Collection
+	templateCollection *mongo.Collection
 }
 
 func NewMongoStorage(mongoURI, dbName string) (*MongoStorage, error) {
@@ -155,7 +268,11 @@ func NewMongoStorage(mongoURI, dbName string) (*MongoStorage, error) {
 	}
 
 	collection := client.Database(dbName).Collection("configs")
-	return &MongoStorage{collection: collection}, nil
+	templateCollection := client.Database(dbName).Collection("templates")
+	return &MongoStorage{
+		collection:         collection,
+		templateCollection: templateCollection,
+	}, nil
 }
 
 func (m *MongoStorage) Store(config *StoredConfig) error {
@@ -262,7 +379,87 @@ func (m *MongoStorage) IncrementDownloads(id string) error {
 	return err
 }
 
+// Template methods for MongoStorage
+func (m *MongoStorage) StoreTemplate(template *StoredTemplate) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := m.templateCollection.InsertOne(ctx, template)
+	return err
+}
+
+func (m *MongoStorage) GetTemplate(id string) (*StoredTemplate, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var template StoredTemplate
+	err := m.templateCollection.FindOne(ctx, bson.M{"_id": id}).Decode(&template)
+	if err != nil {
+		return nil, err
+	}
+	return &template, nil
+}
+
+func (m *MongoStorage) SearchTemplates(search, tags string, featured *bool) ([]*StoredTemplate, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"template.public": true}
+
+	// Add featured filter if specified
+	if featured != nil {
+		filter["template.featured"] = *featured
+	}
+
+	// Add search filter
+	if search != "" {
+		filter["$or"] = bson.A{
+			bson.M{"template.metadata.name": bson.M{"$regex": search, "$options": "i"}},
+			bson.M{"template.metadata.description": bson.M{"$regex": search, "$options": "i"}},
+		}
+	}
+
+	// Add tags filter
+	if tags != "" {
+		tagsList := strings.Split(tags, ",")
+		for i, tag := range tagsList {
+			tagsList[i] = strings.TrimSpace(tag)
+		}
+		filter["template.metadata.tags"] = bson.M{"$in": tagsList}
+	}
+
+	cursor, err := m.templateCollection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []*StoredTemplate
+	for cursor.Next(ctx) {
+		var template StoredTemplate
+		if err := cursor.Decode(&template); err != nil {
+			continue
+		}
+		results = append(results, &template)
+	}
+
+	return results, nil
+}
+
+func (m *MongoStorage) IncrementTemplateDownloads(id string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := m.templateCollection.UpdateOne(
+		ctx,
+		bson.M{"_id": id},
+		bson.M{"$inc": bson.M{"downloads": 1}},
+	)
+	return err
+}
+
 var storage ConfigStorage
+var templateStorage TemplateStorage
 
 func seedData() {
 	// Check if we already have data
@@ -360,13 +557,18 @@ func main() {
 		mongoStorage, err := NewMongoStorage(mongoURI, dbName)
 		if err != nil {
 			log.Printf("Failed to connect to MongoDB: %v, falling back to memory storage", err)
-			storage = NewMemoryStorage()
+			memStorage := NewMemoryStorage()
+			storage = memStorage
+			templateStorage = memStorage
 		} else {
 			storage = mongoStorage
+			templateStorage = mongoStorage
 			log.Println("Connected to MongoDB successfully")
 		}
 	} else {
-		storage = NewMemoryStorage()
+		memStorage := NewMemoryStorage()
+		storage = memStorage
+		templateStorage = memStorage
 		log.Println("Using in-memory storage (set MONGODB_URI for persistent storage)")
 	}
 
@@ -421,6 +623,10 @@ func main() {
 
 		// Get stats
 		api.GET("/configs/stats", getStats)
+
+		// Template endpoints
+		api.POST("/templates", createTemplate)
+		api.GET("/templates", getTemplates)
 	}
 
 	// Web interface routes
@@ -579,5 +785,93 @@ func getStats(c *gin.Context) {
 		"total_configs":    total,
 		"public_configs":   public,
 		"total_downloads":  downloads,
+	})
+}
+
+func createTemplate(c *gin.Context) {
+	var template Template
+	if err := c.ShouldBindJSON(&template); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid request", "details": err.Error()})
+		return
+	}
+
+	// Validation
+	if template.Metadata.Name == "" {
+		c.JSON(400, gin.H{"error": "Template name is required"})
+		return
+	}
+
+	// Create stored template
+	id := uuid.New().String()
+	now := time.Now()
+	stored := &StoredTemplate{
+		ID:        id,
+		Template:  template,
+		CreatedAt: now,
+		UpdatedAt: now,
+		Downloads: 0,
+	}
+
+	// Set metadata created_at if not provided
+	if stored.Template.Metadata.CreatedAt.IsZero() {
+		stored.Template.Metadata.CreatedAt = now
+	}
+
+	// Store in database
+	if err := templateStorage.StoreTemplate(stored); err != nil {
+		c.JSON(500, gin.H{"error": "Failed to store template", "details": err.Error()})
+		return
+	}
+
+	log.Printf("Template created: %s (%s)", template.Metadata.Name, id)
+
+	c.JSON(201, gin.H{
+		"id":  id,
+		"url": fmt.Sprintf("https://api.dotfiles.dev/templates/%s", id),
+	})
+}
+
+func getTemplates(c *gin.Context) {
+	// Parse query parameters
+	search := c.Query("search")
+	tags := c.Query("tags")
+	featuredParam := c.Query("featured")
+
+	var featured *bool
+	if featuredParam != "" {
+		if featuredParam == "true" {
+			f := true
+			featured = &f
+		} else if featuredParam == "false" {
+			f := false
+			featured = &f
+		}
+	}
+
+	// Search templates
+	templates, err := templateStorage.SearchTemplates(search, tags, featured)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Search failed", "details": err.Error()})
+		return
+	}
+
+	// Format response
+	var results []gin.H
+	for _, stored := range templates {
+		results = append(results, gin.H{
+			"id":          stored.ID,
+			"name":        stored.Template.Metadata.Name,
+			"description": stored.Template.Metadata.Description,
+			"author":      stored.Template.Metadata.Author,
+			"tags":        stored.Template.Metadata.Tags,
+			"featured":    stored.Template.Featured,
+			"downloads":   stored.Downloads,
+			"updated_at":  stored.UpdatedAt,
+		})
+	}
+
+	c.JSON(200, gin.H{
+		"templates": results,
+		"total":     len(results),
 	})
 }
