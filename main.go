@@ -636,6 +636,11 @@ func main() {
 		c.Redirect(302, "/api/configs/"+id)
 	})
 
+	// Template detail page route
+	r.GET("/template/:id", func(c *gin.Context) {
+		c.File("./static/template.html")
+	})
+
 	log.Printf("Server starting on port %s", port)
 	log.Fatal(http.ListenAndServe(":"+port, r))
 }

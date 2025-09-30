@@ -221,7 +221,8 @@ function createTemplateCard(template) {
         </div>
         <div class="template-footer">
             <span>${template.downloads} downloads • ${new Date(template.updated_at).toLocaleDateString()}</span>
-            <a href="/api/templates/${template.id}" class="download-btn" target="_blank">View Details</a>
+            <a href="/template/${template.id}" class="download-btn">View Details</a>
+            <a href="/api/templates/${template.id}" class="download-btn" target="_blank">Raw JSON</a>
         </div>
     `;
 
