@@ -627,6 +627,7 @@ func main() {
 		// Template endpoints
 		api.POST("/templates", createTemplate)
 		api.GET("/templates", getTemplates)
+		api.GET("/templates/:id", getTemplate)
 	}
 
 	// Web interface routes
@@ -827,8 +828,23 @@ func createTemplate(c *gin.Context) {
 
 	c.JSON(201, gin.H{
 		"id":  id,
-		"url": fmt.Sprintf("https://api.dotfiles.dev/templates/%s", id),
+		"url": fmt.Sprintf("https://new-dotfiles-production.up.railway.app/templates/%s", id),
 	})
+}
+
+func getTemplate(c *gin.Context) {
+	id := c.Param("id")
+
+	stored, err := templateStorage.GetTemplate(id)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Template not found"})
+		return
+	}
+
+	// Increment download count
+	templateStorage.IncrementTemplateDownloads(id)
+
+	c.JSON(200, stored.Template)
 }
 
 func getTemplates(c *gin.Context) {
