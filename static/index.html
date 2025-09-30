@@ -3,24 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dotfiles Config & Template Sharing</title>
+    <title>Dotfiles Manager - Developer Onboarding Toolkit</title>
     <link rel="stylesheet" href="/static/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🚀 Dotfiles Config Sharing</h1>
-            <p>Discover and share development environment configurations and templates</p>
+        <!-- Hero Section -->
+        <div class="hero">
+            <div class="hero-content">
+                <div class="hero-badge">🚀 Developer Onboarding Toolkit</div>
+                <h1 class="hero-title">
+                    Dotfiles Manager
+                    <span class="hero-subtitle">The complete solution for new developer environment setup</span>
+                </h1>
+                <p class="hero-description">
+                    A comprehensive command-line tool that manages your entire development environment:
+                    Homebrew packages, dotfiles with GNU Stow, GitHub SSH setup, and complete developer onboarding automation.
+                </p>
+
+                <div class="hero-actions">
+                    <div class="install-section">
+                        <div class="install-title">🍺 Quick Install</div>
+                        <div class="install-command">
+                            <code id="install-cmd">brew tap wsoule/tap && brew install dotfiles</code>
+                            <button class="copy-btn" onclick="copyInstallCommand()">Copy</button>
+                        </div>
+                        <div class="install-alt">
+                            Or: <code>curl -fsSL https://raw.githubusercontent.com/wsoule/go-dotfiles/main/install.sh | bash</code>
+                        </div>
+                    </div>
+
+                    <div class="hero-buttons">
+                        <a href="#templates" class="btn btn-primary">🔍 Browse Templates</a>
+                        <a href="https://github.com/wsoule/go-dotfiles" class="btn btn-secondary" target="_blank">📚 View Documentation</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎉</div>
+                    <h3>Complete Onboarding</h3>
+                    <p>One command to set up everything for new developers</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <h3>GitHub SSH Integration</h3>
+                    <p>Automated SSH key generation and GitHub configuration</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📦</div>
+                    <h3>Smart Package Management</h3>
+                    <p>Curated essential packages for developers</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🤝</div>
+                    <h3>Configuration Sharing</h3>
+                    <p>Share and discover configs via GitHub Gist</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📚</div>
+                    <h3>Template Library</h3>
+                    <p>Pre-built configs for web-dev, data science, DevOps</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌍</div>
+                    <h3>Community Discovery</h3>
+                    <p>Find and browse configurations from other developers</p>
+                </div>
+            </div>
         </div>
 
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="switchTab('configs')">📁 Configurations</button>
-            <button class="nav-tab" onclick="switchTab('templates')">📋 Templates</button>
+        <!-- Quick Start Section -->
+        <div class="quick-start">
+            <h2>🚀 Quick Start</h2>
+            <div class="quick-start-grid">
+                <div class="start-option">
+                    <div class="start-number">1</div>
+                    <h3>🆕 New Developer Onboarding</h3>
+                    <code>dotfiles onboard --email your@email.com</code>
+                    <p>Complete setup with GitHub SSH, essential packages, and configuration</p>
+                </div>
+                <div class="start-option">
+                    <div class="start-number">2</div>
+                    <h3>📚 Use a Template</h3>
+                    <code>dotfiles clone template:web-dev</code>
+                    <p>Start with a pre-built template for your development stack</p>
+                </div>
+                <div class="start-option">
+                    <div class="start-number">3</div>
+                    <h3>🔧 Manual Setup</h3>
+                    <code>dotfiles init && dotfiles add git curl</code>
+                    <p>Build your configuration step by step</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav-tabs" id="templates">
+            <button class="nav-tab active" onclick="switchTab('templates')">📚 Featured Templates</button>
+            <button class="nav-tab" onclick="switchTab('configs')">🔍 Community Configs</button>
             <button class="nav-tab" onclick="switchTab('create-template')">➕ Create Template</button>
         </div>
 
+        <!-- Templates Section -->
+        <div id="templates-section" class="content-section active">
+            <div class="search-box">
+                <input type="text" id="template-search" placeholder="Search templates by name, description, or tags...">
+                <br><br>
+                <div class="form-row">
+                    <div class="form-group">
+                        <input type="text" id="template-tags" placeholder="Filter by tags (comma-separated)">
+                    </div>
+                    <div class="form-group">
+                        <select id="template-featured">
+                            <option value="">All Templates</option>
+                            <option value="true">Featured Only</option>
+                            <option value="false">Non-Featured Only</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="templates-container">
+                <div class="loading">Loading templates...</div>
+            </div>
+        </div>
+
         <!-- Configurations Section -->
-        <div id="configs-section" class="content-section active">
+        <div id="configs-section" class="content-section">
             <div class="upload-instructions">
                 <details>
                     <summary>📤 How to Upload Your Config</summary>
@@ -70,30 +182,6 @@
 
             <div id="configs-container">
                 <div class="loading">Loading configurations...</div>
-            </div>
-        </div>
-
-        <!-- Templates Section -->
-        <div id="templates-section" class="content-section">
-            <div class="search-box">
-                <input type="text" id="template-search" placeholder="Search templates by name, description, or tags...">
-                <br><br>
-                <div class="form-row">
-                    <div class="form-group">
-                        <input type="text" id="template-tags" placeholder="Filter by tags (comma-separated)">
-                    </div>
-                    <div class="form-group">
-                        <select id="template-featured">
-                            <option value="">All Templates</option>
-                            <option value="true">Featured Only</option>
-                            <option value="false">Non-Featured Only</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div id="templates-container">
-                <div class="loading">Loading templates...</div>
             </div>
         </div>
 

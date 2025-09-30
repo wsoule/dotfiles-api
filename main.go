@@ -614,6 +614,7 @@ func main() {
 
 		// Get config by ID
 		api.GET("/configs/:id", getConfig)
+		api.GET("/configs/:id/download", downloadConfig)
 
 		// Search configs
 		api.GET("/configs/search", searchConfigs)
@@ -628,6 +629,7 @@ func main() {
 		api.POST("/templates", createTemplate)
 		api.GET("/templates", getTemplates)
 		api.GET("/templates/:id", getTemplate)
+		api.GET("/templates/:id/download", downloadTemplate)
 	}
 
 	// Web interface routes
@@ -700,7 +702,20 @@ func getConfig(c *gin.Context) {
 		return
 	}
 
-	// Increment download count
+	// Don't increment download count - this is just for viewing
+	c.JSON(200, stored.Config)
+}
+
+func downloadConfig(c *gin.Context) {
+	id := c.Param("id")
+
+	stored, err := storage.Get(id)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Config not found"})
+		return
+	}
+
+	// Increment download count for actual downloads
 	storage.IncrementDownloads(id)
 
 	c.JSON(200, stored.Config)
@@ -846,7 +861,20 @@ func getTemplate(c *gin.Context) {
 		return
 	}
 
-	// Increment download count
+	// Don't increment download count - this is just for viewing
+	c.JSON(200, stored.Template)
+}
+
+func downloadTemplate(c *gin.Context) {
+	id := c.Param("id")
+
+	stored, err := templateStorage.GetTemplate(id)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Template not found"})
+		return
+	}
+
+	// Increment download count for actual downloads
 	templateStorage.IncrementTemplateDownloads(id)
 
 	c.JSON(200, stored.Template)

@@ -165,7 +165,7 @@ function createConfigCard(config, item) {
         <div class="config-footer">
             <span>${new Date(config.metadata?.created_at || item.created_at).toLocaleDateString()}</span>
             <button class="copy-command" onclick="copyCommand('${item.id}')">Copy Command</button>
-            <a href="${item.html_url}" class="download-btn" target="_blank">Raw JSON</a>
+            <a href="${item.html_url}/download" class="download-btn" target="_blank">Download JSON</a>
         </div>
     `;
 
@@ -222,7 +222,7 @@ function createTemplateCard(template) {
         <div class="template-footer">
             <span>${template.downloads} downloads • ${new Date(template.updated_at).toLocaleDateString()}</span>
             <a href="/template/${template.id}" class="download-btn">View Details</a>
-            <a href="/api/templates/${template.id}" class="download-btn" target="_blank">Raw JSON</a>
+            <a href="/api/templates/${template.id}/download" class="download-btn" target="_blank">Download JSON</a>
         </div>
     `;
 
@@ -389,11 +389,46 @@ function showMessage(type, message) {
     }
 }
 
+// Copy install command functionality
+function copyInstallCommand() {
+    const command = document.getElementById('install-cmd').textContent;
+    const button = event.target;
+
+    navigator.clipboard.writeText(command).then(() => {
+        const originalText = button.textContent;
+        button.textContent = '✓ Copied!';
+        button.classList.add('copied');
+
+        setTimeout(() => {
+            button.textContent = originalText;
+            button.classList.remove('copied');
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy command:', err);
+        // Fallback for browsers that don't support clipboard API
+        const textArea = document.createElement('textarea');
+        textArea.value = command;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        const originalText = button.textContent;
+        button.textContent = '✓ Copied!';
+        button.classList.add('copied');
+
+        setTimeout(() => {
+            button.textContent = originalText;
+            button.classList.remove('copied');
+        }, 2000);
+    });
+}
+
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
     // Load initial data
     loadStats();
-    loadConfigs();
+    loadTemplates(); // Start with templates instead of configs
 
     // Add event listeners for template search
     const templateSearch = document.getElementById('template-search');
