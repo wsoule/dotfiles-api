@@ -30,13 +30,13 @@
                             <button class="copy-btn" onclick="copyInstallCommand()">Copy</button>
                         </div>
                         <div class="install-alt">
-                            Or: <code>curl -fsSL https://raw.githubusercontent.com/wsoule/go-dotfiles/main/install.sh | bash</code>
+                            Or: <code>curl -fsSL https://raw.githubusercontent.com/wsoule/new-dotfiles/main/install.sh | bash</code>
                         </div>
                     </div>
 
                     <div class="hero-buttons">
                         <a href="#templates" class="btn btn-primary">🔍 Browse Templates</a>
-                        <a href="https://github.com/wsoule/go-dotfiles" class="btn btn-secondary" target="_blank">📚 View Documentation</a>
+                        <a href="https://github.com/wsoule/new-dotfiles" class="btn btn-secondary" target="_blank">📚 View Documentation</a>
                     </div>
                 </div>
             </div>
@@ -187,82 +187,262 @@
 
         <!-- Create Template Section -->
         <div id="create-template-section" class="content-section">
-            <div class="template-form">
-                <h2>Create New Template</h2>
-                <form id="template-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="template-name">Name*</label>
-                            <input type="text" id="template-name" required>
+            <div class="create-template-container">
+                <div class="form-header">
+                    <h2>🚀 Create New Template</h2>
+                    <p>Share your development setup with the community. Create a reusable template that others can build upon.</p>
+                </div>
+
+                <div class="template-wizard">
+                    <div class="wizard-steps">
+                        <div class="step active" data-step="1">
+                            <div class="step-number">1</div>
+                            <div class="step-title">Basic Info</div>
                         </div>
-                        <div class="form-group">
-                            <label for="template-author">Author*</label>
-                            <input type="text" id="template-author" required>
+                        <div class="step" data-step="2">
+                            <div class="step-number">2</div>
+                            <div class="step-title">Packages</div>
+                        </div>
+                        <div class="step" data-step="3">
+                            <div class="step-number">3</div>
+                            <div class="step-title">Advanced</div>
+                        </div>
+                        <div class="step" data-step="4">
+                            <div class="step-number">4</div>
+                            <div class="step-title">Preview</div>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="template-description">Description</label>
-                        <textarea id="template-description"></textarea>
-                    </div>
+                    <form id="template-form">
+                        <!-- Step 1: Basic Information -->
+                        <div class="form-step active" data-step="1">
+                            <h3>📝 Basic Information</h3>
+                            <div class="step-description">
+                                Give your template a name and description that clearly explains its purpose.
+                            </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="template-version">Version</label>
-                            <input type="text" id="template-version" placeholder="1.0.0">
-                        </div>
-                        <div class="form-group">
-                            <label for="template-tags-input">Tags (comma-separated)</label>
-                            <input type="text" id="template-tags-input" placeholder="web-dev, frontend, backend">
-                        </div>
-                    </div>
+                            <div class="form-group">
+                                <label for="template-name">Template Name*</label>
+                                <input type="text" id="template-name" required maxlength="50"
+                                       placeholder="e.g., Full Stack Web Developer Setup">
+                                <div class="help-text">A clear, descriptive name for your template</div>
+                                <div class="char-counter"><span id="name-count">0</span>/50</div>
+                            </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="template-brews">Homebrew Packages (comma-separated)</label>
-                            <textarea id="template-brews" placeholder="git, node, python3"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="template-casks">Homebrew Casks (comma-separated)</label>
-                            <textarea id="template-casks" placeholder="visual-studio-code, google-chrome"></textarea>
-                        </div>
-                    </div>
+                            <div class="form-group">
+                                <label for="template-author">Author*</label>
+                                <input type="text" id="template-author" required maxlength="30"
+                                       placeholder="Your GitHub username or name">
+                                <div class="help-text">Your name or GitHub username</div>
+                                <div class="char-counter"><span id="author-count">0</span>/30</div>
+                            </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="template-taps">Homebrew Taps (comma-separated)</label>
-                            <input type="text" id="template-taps" placeholder="homebrew/cask-fonts">
-                        </div>
-                        <div class="form-group">
-                            <label for="template-stow">Stow Packages (comma-separated)</label>
-                            <input type="text" id="template-stow" placeholder="vim, git, zsh">
-                        </div>
-                    </div>
+                            <div class="form-group">
+                                <label for="template-description">Description</label>
+                                <textarea id="template-description" rows="4" maxlength="500"
+                                          placeholder="Describe what this template includes and who it's for. Be specific about the development stack, tools, and workflow it supports."></textarea>
+                                <div class="help-text">Explain what this template does and who should use it</div>
+                                <div class="char-counter"><span id="desc-count">0</span>/500</div>
+                            </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="template-extends">Extends Template ID</label>
-                            <input type="text" id="template-extends" placeholder="base-template">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="template-version">Version</label>
+                                    <input type="text" id="template-version" placeholder="1.0.0" value="1.0.0">
+                                    <div class="help-text">Semantic version (e.g., 1.0.0)</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="template-tags-input">Tags</label>
+                                    <input type="text" id="template-tags-input"
+                                           placeholder="web-dev, frontend, react, typescript">
+                                    <div class="help-text">Comma-separated tags for discoverability</div>
+                                    <div class="tag-suggestions">
+                                        <div class="popular-tags">
+                                            Popular: <span class="tag-pill" onclick="addTag('web-dev')">web-dev</span>
+                                            <span class="tag-pill" onclick="addTag('frontend')">frontend</span>
+                                            <span class="tag-pill" onclick="addTag('backend')">backend</span>
+                                            <span class="tag-pill" onclick="addTag('data-science')">data-science</span>
+                                            <span class="tag-pill" onclick="addTag('devops')">devops</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="template-overrides">Overrides (comma-separated)</label>
-                            <input type="text" id="template-overrides" placeholder="brews, casks">
-                        </div>
-                    </div>
 
-                    <div class="form-row">
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="template-public" checked>
-                            <label for="template-public">Public Template</label>
-                        </div>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="template-add-only">
-                            <label for="template-add-only">Add Only (Don't Replace)</label>
-                        </div>
-                    </div>
+                        <!-- Step 2: Packages -->
+                        <div class="form-step" data-step="2">
+                            <h3>📦 Package Configuration</h3>
+                            <div class="step-description">
+                                Define the packages that will be installed with your template.
+                            </div>
 
-                    <button type="submit" class="submit-btn">Create Template</button>
-                </form>
+                            <div class="package-sections">
+                                <div class="package-section">
+                                    <div class="package-header">
+                                        <h4>🍺 Homebrew Packages</h4>
+                                        <div class="package-info">Command-line tools and libraries</div>
+                                    </div>
+                                    <div class="package-input-group">
+                                        <input type="text" id="brew-input" placeholder="Type package name and press Enter">
+                                        <button type="button" class="add-btn" onclick="addPackage('brews', 'brew-input')">Add</button>
+                                    </div>
+                                    <div class="package-suggestions">
+                                        Popular: <span class="package-pill" onclick="addPackageFromPill('brews', 'git')">git</span>
+                                        <span class="package-pill" onclick="addPackageFromPill('brews', 'node')">node</span>
+                                        <span class="package-pill" onclick="addPackageFromPill('brews', 'python3')">python3</span>
+                                        <span class="package-pill" onclick="addPackageFromPill('brews', 'curl')">curl</span>
+                                        <span class="package-pill" onclick="addPackageFromPill('brews', 'wget')">wget</span>
+                                        <span class="package-pill" onclick="addPackageFromPill('brews', 'tree')">tree</span>
+                                        <span class="package-pill" onclick="addPackageFromPill('brews', 'jq')">jq</span>
+                                        <span class="package-pill" onclick="addPackageFromPill('brews', 'docker')">docker</span>
+                                    </div>
+                                    <div id="brews-list" class="package-list"></div>
+                                    <textarea id="template-brews" style="display:none;"></textarea>
+                                </div>
+
+                                <div class="package-section">
+                                    <div class="package-header">
+                                        <h4>📱 Homebrew Casks</h4>
+                                        <div class="package-info">GUI applications</div>
+                                    </div>
+                                    <div class="package-input-group">
+                                        <input type="text" id="cask-input" placeholder="Type application name and press Enter">
+                                        <button type="button" class="add-btn" onclick="addPackage('casks', 'cask-input')">Add</button>
+                                    </div>
+                                    <div class="package-suggestions">
+                                        Popular: <span class="package-pill" onclick="addPackageFromPill('casks', 'visual-studio-code')">visual-studio-code</span>
+                                        <span class="package-pill" onclick="addPackageFromPill('casks', 'google-chrome')">google-chrome</span>
+                                        <span class="package-pill" onclick="addPackageFromPill('casks', 'iterm2')">iterm2</span>
+                                        <span class="package-pill" onclick="addPackageFromPill('casks', 'slack')">slack</span>
+                                        <span class="package-pill" onclick="addPackageFromPill('casks', 'figma')">figma</span>
+                                        <span class="package-pill" onclick="addPackageFromPill('casks', 'docker')">docker</span>
+                                    </div>
+                                    <div id="casks-list" class="package-list"></div>
+                                    <textarea id="template-casks" style="display:none;"></textarea>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="package-section">
+                                        <div class="package-header">
+                                            <h4>🔗 Homebrew Taps</h4>
+                                            <div class="package-info">Additional repositories</div>
+                                        </div>
+                                        <div class="package-input-group">
+                                            <input type="text" id="tap-input" placeholder="homebrew/cask-fonts">
+                                            <button type="button" class="add-btn" onclick="addPackage('taps', 'tap-input')">Add</button>
+                                        </div>
+                                        <div id="taps-list" class="package-list"></div>
+                                        <input type="text" id="template-taps" style="display:none;">
+                                    </div>
+
+                                    <div class="package-section">
+                                        <div class="package-header">
+                                            <h4>📁 Stow Packages</h4>
+                                            <div class="package-info">Dotfile configurations</div>
+                                        </div>
+                                        <div class="package-input-group">
+                                            <input type="text" id="stow-input" placeholder="vim, zsh, tmux">
+                                            <button type="button" class="add-btn" onclick="addPackage('stow', 'stow-input')">Add</button>
+                                        </div>
+                                        <div id="stow-list" class="package-list"></div>
+                                        <input type="text" id="template-stow" style="display:none;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Advanced Options -->
+                        <div class="form-step" data-step="3">
+                            <h3>⚙️ Advanced Options</h3>
+                            <div class="step-description">
+                                Configure template inheritance and behavior (optional).
+                            </div>
+
+                            <div class="advanced-options">
+                                <div class="option-card">
+                                    <h4>🏗️ Template Inheritance</h4>
+                                    <div class="form-group">
+                                        <label for="template-extends">Extends Template</label>
+                                        <select id="template-extends">
+                                            <option value="">None (start from scratch)</option>
+                                            <!-- Will be populated dynamically -->
+                                        </select>
+                                        <div class="help-text">Build upon an existing template</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="template-overrides">Override Sections</label>
+                                        <div class="checkbox-pills">
+                                            <label class="pill-checkbox">
+                                                <input type="checkbox" value="brews"> Brews
+                                            </label>
+                                            <label class="pill-checkbox">
+                                                <input type="checkbox" value="casks"> Casks
+                                            </label>
+                                            <label class="pill-checkbox">
+                                                <input type="checkbox" value="taps"> Taps
+                                            </label>
+                                            <label class="pill-checkbox">
+                                                <input type="checkbox" value="stow"> Stow
+                                            </label>
+                                        </div>
+                                        <div class="help-text">Which sections should replace the parent template's packages</div>
+                                        <input type="text" id="template-overrides" style="display:none;">
+                                    </div>
+                                </div>
+
+                                <div class="option-card">
+                                    <h4>🔧 Behavior Settings</h4>
+                                    <div class="setting-group">
+                                        <label class="setting-toggle">
+                                            <input type="checkbox" id="template-public" checked>
+                                            <div class="toggle-switch"></div>
+                                            <div class="setting-info">
+                                                <div class="setting-title">Public Template</div>
+                                                <div class="setting-desc">Make this template discoverable by others</div>
+                                            </div>
+                                        </label>
+
+                                        <label class="setting-toggle">
+                                            <input type="checkbox" id="template-add-only">
+                                            <div class="toggle-switch"></div>
+                                            <div class="setting-info">
+                                                <div class="setting-title">Add-Only Mode</div>
+                                                <div class="setting-desc">Add packages without replacing existing ones</div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Preview -->
+                        <div class="form-step" data-step="4">
+                            <h3>👀 Preview Template</h3>
+                            <div class="step-description">
+                                Review your template before creating it.
+                            </div>
+
+                            <div class="preview-container">
+                                <div class="preview-card" id="template-preview">
+                                    <!-- Preview will be generated here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-navigation">
+                            <button type="button" id="prev-btn" class="nav-btn secondary" onclick="previousStep()" style="display:none;">
+                                ← Previous
+                            </button>
+                            <button type="button" id="next-btn" class="nav-btn primary" onclick="nextStep()">
+                                Next →
+                            </button>
+                            <button type="submit" id="submit-btn" class="nav-btn primary" style="display:none;">
+                                🚀 Create Template
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

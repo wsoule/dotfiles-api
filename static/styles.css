@@ -622,7 +622,143 @@ body {
     line-height: 1;
 }
 
-/* Form Styles */
+/* Create Template Form */
+.create-template-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.form-header h2 {
+    color: var(--text-primary);
+    font-size: 2.5em;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.form-header p {
+    color: var(--text-secondary);
+    font-size: 1.1em;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Template Wizard */
+.template-wizard {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: var(--shadow-md);
+}
+
+.wizard-steps {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 40px;
+    position: relative;
+}
+
+.wizard-steps::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 12.5%;
+    right: 12.5%;
+    height: 2px;
+    background: var(--border-color);
+    z-index: 1;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    flex: 1;
+    max-width: 120px;
+    z-index: 2;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+.step-title {
+    font-size: 0.9em;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.step.active .step-number {
+    background: var(--gradient-primary);
+    border-color: var(--accent-primary);
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.step.active .step-title {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.step.completed .step-number {
+    background: var(--accent-success);
+    border-color: var(--accent-success);
+    color: white;
+}
+
+.step.completed .step-title {
+    color: var(--accent-success);
+}
+
+/* Form Steps */
+.form-step {
+    display: none;
+    animation: slideIn 0.3s ease;
+}
+
+.form-step.active {
+    display: block;
+}
+
+.form-step h3 {
+    color: var(--text-primary);
+    font-size: 1.8em;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.step-description {
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+    font-size: 1.1em;
+    line-height: 1.6;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* Enhanced Form Styles */
 .template-form {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
@@ -636,6 +772,380 @@ body {
     margin-bottom: 30px;
     font-size: 2em;
     font-weight: 600;
+}
+
+.help-text {
+    font-size: 0.85em;
+    color: var(--text-muted);
+    margin-top: 5px;
+    line-height: 1.4;
+}
+
+.char-counter {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    text-align: right;
+    margin-top: 5px;
+}
+
+/* Tag and Package Pills */
+.tag-suggestions, .package-suggestions {
+    margin-top: 10px;
+}
+
+.popular-tags {
+    font-size: 0.9em;
+    color: var(--text-secondary);
+}
+
+.tag-pill, .package-pill {
+    display: inline-block;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-accent);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    margin: 2px 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tag-pill:hover, .package-pill:hover {
+    background: var(--accent-primary);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Package Management */
+.package-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.package-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 25px;
+}
+
+.package-header {
+    margin-bottom: 20px;
+}
+
+.package-header h4 {
+    color: var(--text-primary);
+    font-size: 1.2em;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.package-info {
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+.package-input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.package-input-group input {
+    flex: 1;
+    padding: 12px 16px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 1em;
+}
+
+.add-btn {
+    background: var(--accent-primary);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.add-btn:hover {
+    background: var(--accent-secondary);
+    transform: translateY(-1px);
+}
+
+.package-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 40px;
+    padding: 10px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.package-tag {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.85em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    animation: fadeIn 0.3s ease;
+}
+
+.package-tag .remove-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.package-tag .remove-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Advanced Options */
+.advanced-options {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.option-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 25px;
+}
+
+.option-card h4 {
+    color: var(--text-primary);
+    font-size: 1.2em;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.checkbox-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.pill-checkbox {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9em;
+    color: var(--text-secondary);
+}
+
+.pill-checkbox input {
+    display: none;
+}
+
+.pill-checkbox:hover {
+    border-color: var(--accent-primary);
+    background: var(--bg-hover);
+}
+
+.pill-checkbox input:checked + * {
+    background: var(--accent-primary);
+    color: white;
+    border-color: var(--accent-primary);
+}
+
+.pill-checkbox input:checked {
+    background: var(--accent-primary);
+    color: white;
+    border-color: var(--accent-primary);
+}
+
+/* Setting Toggles */
+.setting-group {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.setting-toggle {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    padding: 15px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.setting-toggle:hover {
+    border-color: var(--border-hover);
+    background: var(--bg-hover);
+}
+
+.setting-toggle input {
+    display: none;
+}
+
+.toggle-switch {
+    width: 50px;
+    height: 26px;
+    background: var(--border-color);
+    border-radius: 13px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 22px;
+    height: 22px;
+    background: white;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.setting-toggle input:checked + .toggle-switch {
+    background: var(--accent-primary);
+}
+
+.setting-toggle input:checked + .toggle-switch::after {
+    transform: translateX(24px);
+}
+
+.setting-info {
+    flex: 1;
+}
+
+.setting-title {
+    color: var(--text-primary);
+    font-weight: 500;
+    margin-bottom: 3px;
+}
+
+.setting-desc {
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+/* Preview */
+.preview-container {
+    margin-top: 20px;
+}
+
+.preview-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    padding: 25px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+/* Navigation */
+.form-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.nav-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-btn.primary {
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.nav-btn.primary:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.nav-btn.secondary {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.nav-btn.secondary:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-hover);
+}
+
+/* Responsive Design for Wizard */
+@media (max-width: 768px) {
+    .template-wizard {
+        padding: 25px;
+    }
+
+    .wizard-steps {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .wizard-steps::before {
+        display: none;
+    }
+
+    .step {
+        flex: none;
+    }
+
+    .package-sections .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .form-navigation {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .nav-btn {
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 .form-group {
