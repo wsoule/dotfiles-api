@@ -916,6 +916,10 @@ func getTemplates(c *gin.Context) {
 			"featured":    stored.Template.Featured,
 			"downloads":   stored.Downloads,
 			"updated_at":  stored.UpdatedAt,
+			"brews":       stored.Template.Brews,
+			"casks":       stored.Template.Casks,
+			"taps":        stored.Template.Taps,
+			"stow":        stored.Template.Stow,
 		})
 	}
 
