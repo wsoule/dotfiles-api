@@ -848,7 +848,7 @@ func createTemplate(c *gin.Context) {
 
 	c.JSON(201, gin.H{
 		"id":  id,
-		"url": fmt.Sprintf("https://new-dotfiles-production.up.railway.app/templates/%s", id),
+		"url": fmt.Sprintf("https://dotfiles.wyat.me/templates/%s", id),
 	})
 }
 
