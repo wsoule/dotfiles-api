@@ -1,6 +1,10 @@
-# Dotfiles Manager - Community Template Platform
+# Dotfiles Web - Community Template Platform
 
-A comprehensive Go web application for sharing and discovering development environment templates. Features GitHub authentication, community reviews, and advanced search capabilities. The "awesome" version of machine setup!
+A modern, scalable Go web application for sharing and discovering development environment templates. Built with clean architecture principles, featuring GitHub authentication, organization management, community reviews, and comprehensive API documentation.
+
+## 🎯 **Recently Refactored with Clean Architecture**
+
+This application has been completely refactored from a monolithic structure into a maintainable, well-organized codebase following Go best practices. Perfect foundation for modern frontend frameworks!
 
 ## 🌟 Key Features
 
@@ -9,6 +13,13 @@ A comprehensive Go web application for sharing and discovering development envir
 - **User profiles** with avatars and metadata
 - **Session management** with secure cookies
 - **Protected endpoints** for user-specific actions
+
+### 🏢 **Organizations & Teams**
+- **Organization management** with role-based permissions (owner, admin, member)
+- **Template ownership** by organizations or individuals
+- **Invitation system** with secure token-based invites
+- **Member management** with different access levels
+- **Organization profiles** with public/private visibility
 
 ### ⭐ **Template Ratings & Reviews**
 - **5-star rating system** with aggregate calculations
@@ -44,21 +55,49 @@ A comprehensive Go web application for sharing and discovering development envir
 - **Download tracking** and statistics
 - **Template versioning** and metadata
 
-## 🏗️ Architecture
+## 🏗️ Clean Architecture
+
+This application follows clean architecture principles with clear separation of concerns:
+
+### 📁 **Project Structure**
+```
+├── cmd/server/              # Application entry point
+├── internal/
+│   ├── config/              # Configuration management
+│   ├── dto/                 # Data Transfer Objects + validation
+│   ├── handlers/            # HTTP request handlers
+│   ├── middleware/          # HTTP middleware (auth, CORS, rate limiting)
+│   ├── models/              # Domain models
+│   ├── repository/          # Data access layer interfaces
+│   └── services/            # Business logic layer
+├── pkg/errors/              # Custom error handling
+├── docs/                    # API and architecture documentation
+└── static/                  # Frontend assets (legacy)
+```
+
+### 🎯 **Architecture Benefits**
+- **Clean separation** of concerns across layers
+- **Repository pattern** for easy database switching
+- **Comprehensive validation** with DTOs
+- **Structured error handling** with custom types
+- **Middleware-based** cross-cutting concerns
+- **Interface-driven** design for testability
+- **Environment-based** configuration management
 
 ### Backend (Go + Gin)
-- **RESTful API** with 20+ endpoints
-- **Modular storage interface** supporting MongoDB and in-memory storage
-- **Comprehensive data models** for users, templates, reviews, and ratings
-- **Authentication middleware** protecting sensitive operations
-- **Seeded data** for immediate functionality
+- **RESTful API** with 30+ documented endpoints
+- **Repository pattern** supporting MongoDB and in-memory storage
+- **Comprehensive data models** for users, templates, organizations, and reviews
+- **Role-based authentication** and authorization middleware
+- **Rate limiting** and security features
+- **Comprehensive API documentation**
 
-### Frontend (HTML + CSS + JavaScript)
-- **Vanilla JavaScript** for maximum compatibility
-- **Modern CSS** with variables and responsive design
-- **Component-based** template rendering
-- **Real-time API integration**
-- **Progressive enhancement** approach
+### Frontend (Ready for Modern Frameworks)
+- **Well-documented REST API** for easy integration
+- **Consistent error responses** for proper error handling
+- **Comprehensive validation** at API boundaries
+- **Static assets** as reference implementation
+- **CORS support** for frontend frameworks
 
 ## 🚀 API Endpoints
 
@@ -73,19 +112,45 @@ A comprehensive Go web application for sharing and discovering development envir
 - `GET /api/templates/:id` - Get template details
 - `GET /api/templates/:id/download` - Download template
 - `POST /api/templates` - Create new template
-- `GET /api/templates/:id/reviews` - Get template reviews
-- `POST /api/templates/:id/reviews` - Create review (auth required)
+- `PUT /api/templates/:id` - Update template
+- `DELETE /api/templates/:id` - Delete template
+- `GET /api/templates/search` - Search templates
+- `GET /api/templates/stats` - Get template statistics
 - `GET /api/templates/:id/rating` - Get template rating
 
-### Users & Favorites
-- `GET /api/users/:username` - Get user profile
-- `POST /api/users/favorites/:templateId` - Add to favorites (auth required)
-- `DELETE /api/users/favorites/:templateId` - Remove from favorites (auth required)
+### Organizations
+- `GET /api/organizations` - List organizations
+- `POST /api/organizations` - Create organization
+- `GET /api/organizations/:id` - Get organization details
+- `PUT /api/organizations/:id` - Update organization
+- `DELETE /api/organizations/:id` - Delete organization
+- `GET /api/organizations/:id/members` - Get organization members
+- `POST /api/organizations/:id/members` - Add member
+- `PUT /api/organizations/:id/members/:userId` - Update member role
+- `DELETE /api/organizations/:id/members/:userId` - Remove member
+- `POST /api/organizations/:id/invites` - Create invitation
+- `GET /api/organizations/:id/invites` - List invitations
+- `POST /api/organizations/invites/accept` - Accept invitation
 
-### Reviews
-- `PUT /api/reviews/:id` - Update review (auth required)
-- `DELETE /api/reviews/:id` - Delete review (auth required)
-- `POST /api/reviews/:id/helpful` - Mark review helpful (auth required)
+### Users & Profiles
+- `GET /api/users/:id` - Get user by ID
+- `GET /api/users/username/:username` - Get user by username
+- `POST /api/users` - Create user
+- `PUT /api/users/:id` - Update user
+- `DELETE /api/users/:id` - Delete user
+- `GET /api/users` - List users
+- `POST /api/users/:id/favorites/:templateId` - Add to favorites
+- `DELETE /api/users/:id/favorites/:templateId` - Remove from favorites
+- `GET /api/users/:id/favorites` - Get user favorites
+
+### Reviews & Ratings
+- `POST /api/reviews` - Create review
+- `GET /api/reviews/:id` - Get review
+- `PUT /api/reviews/:id` - Update review
+- `DELETE /api/reviews/:id` - Delete review
+- `GET /api/templates/:id/reviews` - Get template reviews
+- `GET /api/users/:id/reviews` - Get user reviews
+- `POST /api/reviews/:id/helpful` - Mark review helpful
 
 ### Legacy Config API
 - `POST /api/configs/upload` - Upload a config
@@ -195,20 +260,39 @@ curl http://localhost:8080/auth/user
 5. Test GitHub authentication (if configured)
 6. Try rating and reviewing templates (requires auth)
 
-## 📁 Project Structure
+## 📚 Documentation
+
+- **[API Documentation](docs/api.md)** - Complete REST API reference with examples
+- **[Architecture Guide](docs/architecture.md)** - Detailed architecture documentation
+- **[GitHub Repository](https://github.com/wsoule/dotfiles-web)** - Source code and issues
+
+## 📁 Current Project Structure
 
 ```
-├── main.go                     # Main application with all backend logic
-├── static/
-│   ├── index.html             # Home page with config upload
-│   ├── templates.html         # Template browser with advanced features
-│   ├── docs.html              # Documentation page
-│   ├── styles.css             # Main stylesheet with dark theme
-│   ├── universal-header.css   # Shared header styles
-│   └── app.js                 # JavaScript for home page
-├── go.mod                     # Go module dependencies
-├── go.sum                     # Go module checksums
-└── README.md                  # This file
+├── main.go                          # Legacy monolithic file (being migrated)
+├── cmd/server/                      # Application entry point (new architecture)
+├── internal/                        # Private application code
+│   ├── config/                      # Configuration management
+│   ├── dto/                         # Data Transfer Objects + validation
+│   ├── handlers/                    # HTTP request handlers
+│   ├── middleware/                  # HTTP middleware
+│   ├── models/                      # Domain models
+│   ├── repository/                  # Data access layer
+│   └── services/                    # Business logic
+├── pkg/errors/                      # Custom error handling
+├── docs/                            # API and architecture documentation
+├── static/                          # Frontend assets (legacy)
+│   ├── index.html                   # Home page
+│   ├── templates.html               # Template browser
+│   ├── profile.html                 # User profiles
+│   ├── organizations.html           # Organization management
+│   ├── docs.html                    # Documentation page
+│   ├── styles.css                   # Main stylesheet
+│   ├── universal-header.css         # Shared header styles
+│   └── app.js                       # JavaScript
+├── go.mod                           # Go module dependencies
+├── go.sum                           # Go module checksums
+└── README.md                        # This file
 ```
 
 ## 🎯 Key Features in Detail
@@ -242,14 +326,44 @@ curl http://localhost:8080/auth/user
 - Toast notifications for actions
 - Progressive loading with fallbacks
 
+## 🚀 Migration Status
+
+This application is currently being migrated from a monolithic structure to clean architecture:
+
+### ✅ **Completed**
+- Domain models extraction and separation
+- Error handling package with custom types
+- DTOs with comprehensive validation
+- Configuration management system
+- Middleware package (auth, CORS, logging, rate limiting)
+- Repository pattern interfaces
+- Handler package structure
+- Comprehensive API documentation
+
+### 🔄 **In Progress**
+- Service layer implementation
+- Complete repository implementations
+- Migration from monolithic main.go
+- Testing framework setup
+
+### 📋 **Planned**
+- Database integration (MongoDB/PostgreSQL)
+- Advanced caching strategies
+- Microservices decomposition
+- Event-driven architecture
+
 ## 🤝 Contributing
 
-1. Fork the repository
+1. Fork the repository at [github.com/wsoule/dotfiles-web](https://github.com/wsoule/dotfiles-web)
 2. Create a feature branch
-3. Make your changes
-4. Test locally
+3. Make your changes following the clean architecture patterns
+4. Test locally with both legacy and new endpoints
 5. Submit a pull request
 
 ## 📄 License
 
 This project is open source and available under the MIT License.
+
+---
+
+**Ready for modern frontend frameworks with a solid, well-documented backend foundation!** 🎉
