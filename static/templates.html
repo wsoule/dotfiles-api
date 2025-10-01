@@ -20,9 +20,36 @@
                 <a href="/docs">Documentation</a>
             </nav>
             <div class="header-attribution">
-                <span>Created by Wyat Soule</span>
-                <a href="https://github.com/wsoule" target="_blank">GitHub</a>
-                <a href="https://github.com/wsoule/go-dotfiles" target="_blank">Repository</a>
+                <div class="auth-section" id="auth-section">
+                    <div class="auth-loading" id="auth-loading">Loading...</div>
+                    <div class="auth-logged-out" id="auth-logged-out" style="display: none;">
+                        <a href="/auth/github" class="btn btn-primary btn-sm">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                            </svg>
+                            Sign in with GitHub
+                        </a>
+                    </div>
+                    <div class="auth-not-configured" id="auth-not-configured" style="display: none;">
+                        <span class="auth-message">Authentication not configured</span>
+                    </div>
+                    <div class="auth-logged-in" id="auth-logged-in" style="display: none;">
+                        <div class="user-menu">
+                            <img id="user-avatar" class="user-avatar" src="" alt="">
+                            <span id="user-name"></span>
+                            <div class="user-dropdown">
+                                <a href="#" id="user-profile-link">Profile</a>
+                                <a href="#" onclick="showFavorites()">Favorites</a>
+                                <a href="/auth/logout">Sign out</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="attribution-links">
+                    <span>Created by Wyat Soule</span>
+                    <a href="https://github.com/wsoule" target="_blank">GitHub</a>
+                    <a href="https://github.com/wsoule/go-dotfiles" target="_blank">Repository</a>
+                </div>
             </div>
         </div>
     </header>
@@ -200,13 +227,62 @@
         let allTemplates = [];
         let currentView = 'grid';
         let currentTemplate = null;
+        let currentUser = null;
+        let templateRatings = new Map();
 
         // Load templates on page load
         document.addEventListener('DOMContentLoaded', function() {
+            checkAuthStatus();
             loadTemplates();
             loadTemplateStats();
             setupEventListeners();
         });
+
+        // Authentication functions
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch('/auth/user');
+                if (response.ok) {
+                    currentUser = await response.json();
+                    showLoggedInState();
+                } else {
+                    const data = await response.json();
+                    if (data.configured === false) {
+                        showAuthNotConfigured();
+                    } else {
+                        showLoggedOutState();
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to check auth status:', error);
+                showLoggedOutState();
+            }
+        }
+
+        function showLoggedInState() {
+            document.getElementById('auth-loading').style.display = 'none';
+            document.getElementById('auth-logged-out').style.display = 'none';
+            document.getElementById('auth-not-configured').style.display = 'none';
+            document.getElementById('auth-logged-in').style.display = 'block';
+
+            document.getElementById('user-avatar').src = currentUser.avatar_url;
+            document.getElementById('user-name').textContent = currentUser.username;
+            document.getElementById('user-profile-link').href = `/users/${currentUser.username}`;
+        }
+
+        function showLoggedOutState() {
+            document.getElementById('auth-loading').style.display = 'none';
+            document.getElementById('auth-logged-in').style.display = 'none';
+            document.getElementById('auth-not-configured').style.display = 'none';
+            document.getElementById('auth-logged-out').style.display = 'block';
+        }
+
+        function showAuthNotConfigured() {
+            document.getElementById('auth-loading').style.display = 'none';
+            document.getElementById('auth-logged-in').style.display = 'none';
+            document.getElementById('auth-logged-out').style.display = 'none';
+            document.getElementById('auth-not-configured').style.display = 'block';
+        }
 
         function setupEventListeners() {
             // Search input
@@ -221,6 +297,20 @@
                 const response = await fetch('/api/templates');
                 const data = await response.json();
                 allTemplates = data.templates || [];
+
+                // Load ratings for all templates
+                await Promise.all(allTemplates.map(async (template) => {
+                    try {
+                        const ratingResponse = await fetch(`/api/templates/${template.id}/rating`);
+                        if (ratingResponse.ok) {
+                            const rating = await ratingResponse.json();
+                            templateRatings.set(template.id, rating);
+                        }
+                    } catch (error) {
+                        console.error(`Failed to load rating for template ${template.id}:`, error);
+                    }
+                }));
+
                 sortAndDisplayTemplates();
                 updateCategoryCounts();
             } catch (error) {
@@ -324,11 +414,20 @@
         function createTemplateCard(template) {
             const isListView = currentView === 'list';
             const cardClass = isListView ? 'template-card list-view' : 'template-card';
+            const rating = templateRatings.get(template.id);
+            const isFavorited = currentUser && currentUser.favorites && currentUser.favorites.includes(template.id);
 
             return `
                 <div class="${cardClass}" onclick="showTemplateDetail('${template.id}')">
                     <div class="template-header">
-                        <h3>${template.name}${template.featured ? '<span class="featured-badge">Featured</span>' : ''}</h3>
+                        <div class="template-title-row">
+                            <h3>${template.name}${template.featured ? '<span class="featured-badge">Featured</span>' : ''}</h3>
+                            ${rating && rating.total_ratings > 0 ? `
+                            <div class="template-rating">
+                                <div class="stars">${generateStars(rating.average_rating)}</div>
+                                <span class="rating-text">(${rating.total_ratings})</span>
+                            </div>` : ''}
+                        </div>
                         <div class="author">by ${template.author}</div>
                         <div class="description">${template.description || 'No description provided'}</div>
                     </div>
@@ -352,6 +451,12 @@
                     <div class="template-footer">
                         <span>${(template.downloads || 0).toLocaleString()} downloads • ${new Date(template.updated_at).toLocaleDateString()}</span>
                         <div class="template-actions">
+                            ${currentUser ? `
+                            <button class="favorite-btn ${isFavorited ? 'favorited' : ''}"
+                                    onclick="event.stopPropagation(); toggleFavorite('${template.id}')"
+                                    title="${isFavorited ? 'Remove from favorites' : 'Add to favorites'}">
+                                ${isFavorited ? '❤️' : '🤍'}
+                            </button>` : ''}
                             <button class="download-btn" onclick="event.stopPropagation(); downloadTemplate('${template.id}')">
                                 Download
                             </button>
@@ -359,6 +464,16 @@
                     </div>
                 </div>
             `;
+        }
+
+        function generateStars(rating) {
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 >= 0.5;
+            const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+            return '★'.repeat(fullStars) +
+                   (hasHalfStar ? '☆' : '') +
+                   '☆'.repeat(emptyStars);
         }
 
         function updateCategoryCounts() {
@@ -451,12 +566,17 @@
 
         async function showTemplateDetail(templateId) {
             try {
-                const response = await fetch(`/api/templates/${templateId}`);
-                const template = await response.json();
-                currentTemplate = template;
+                const [templateResponse, reviewsResponse] = await Promise.all([
+                    fetch(`/api/templates/${templateId}`),
+                    fetch(`/api/templates/${templateId}/reviews`)
+                ]);
+
+                const template = await templateResponse.json();
+                const reviewsData = await reviewsResponse.json();
+                currentTemplate = { ...template, reviews: reviewsData.reviews || [] };
 
                 document.getElementById('modal-title').textContent = template.metadata.name;
-                document.getElementById('modal-body').innerHTML = generateTemplateDetailHTML(template);
+                document.getElementById('modal-body').innerHTML = generateTemplateDetailHTML(currentTemplate);
                 document.getElementById('template-modal').style.display = 'block';
                 document.getElementById('modal-overlay').style.display = 'block';
             } catch (error) {
@@ -466,6 +586,10 @@
         }
 
         function generateTemplateDetailHTML(template) {
+            const rating = templateRatings.get(template.id);
+            const reviews = template.reviews || [];
+            const userReview = currentUser ? reviews.find(r => r.user_id === currentUser.id) : null;
+
             return `
                 <div class="template-detail">
                     <div class="template-info">
@@ -475,6 +599,29 @@
                             <span class="meta-item"><strong>Updated:</strong> ${new Date(template.metadata.created_at).toLocaleDateString()}</span>
                             ${template.featured ? '<span class="featured-badge">Featured</span>' : ''}
                         </div>
+
+                        ${rating && rating.total_ratings > 0 ? `
+                        <div class="template-rating-detail">
+                            <div class="rating-summary">
+                                <div class="average-rating">
+                                    <span class="rating-number">${rating.average_rating.toFixed(1)}</span>
+                                    <div class="stars-large">${generateStars(rating.average_rating)}</div>
+                                    <span class="rating-count">${rating.total_ratings} review${rating.total_ratings !== 1 ? 's' : ''}</span>
+                                </div>
+                                <div class="rating-distribution">
+                                    ${[5,4,3,2,1].map(star => `
+                                        <div class="rating-bar">
+                                            <span>${star}★</span>
+                                            <div class="bar">
+                                                <div class="fill" style="width: ${rating.distribution[star] ? (rating.distribution[star] / rating.total_ratings * 100) : 0}%"></div>
+                                            </div>
+                                            <span>${rating.distribution[star] || 0}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>` : ''}
+
                         <p class="template-description">${template.metadata.description || 'No description provided'}</p>
                         ${template.metadata.tags && template.metadata.tags.length ? `
                         <div class="template-tags">
@@ -513,6 +660,59 @@
                             <button class="copy-btn" onclick="copyToClipboard('dotfiles clone template:${template.metadata.name.toLowerCase().replace(/\s+/g, '-')}')">Copy</button>
                         </div>
                     </div>
+
+                    <div class="reviews-section">
+                        <div class="reviews-header">
+                            <h3>Reviews</h3>
+                            ${currentUser && !userReview ? `
+                            <button class="btn btn-primary" onclick="showReviewForm()">Write a Review</button>
+                            ` : ''}
+                        </div>
+
+                        ${currentUser && !userReview ? `
+                        <div class="review-form" id="review-form" style="display: none;">
+                            <h4>Write a Review</h4>
+                            <div class="rating-input">
+                                <label>Rating:</label>
+                                <div class="star-rating" id="star-rating">
+                                    ${[1,2,3,4,5].map(star => `
+                                        <span class="star" data-rating="${star}" onclick="setRating(${star})">☆</span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <textarea id="review-comment" placeholder="Share your experience with this template..." rows="4"></textarea>
+                            <div class="form-actions">
+                                <button class="btn btn-secondary" onclick="hideReviewForm()">Cancel</button>
+                                <button class="btn btn-primary" onclick="submitReview()">Submit Review</button>
+                            </div>
+                        </div>` : ''}
+
+                        <div class="reviews-list">
+                            ${reviews.length > 0 ? reviews.map(review => `
+                                <div class="review-item">
+                                    <div class="review-header">
+                                        <img src="${review.avatar_url}" alt="${review.username}" class="review-avatar">
+                                        <div class="review-info">
+                                            <strong>${review.username}</strong>
+                                            <div class="review-rating">${generateStars(review.rating)}</div>
+                                            <span class="review-date">${new Date(review.created_at).toLocaleDateString()}</span>
+                                        </div>
+                                        ${currentUser && review.user_id === currentUser.id ? `
+                                        <div class="review-actions">
+                                            <button class="btn-text" onclick="editReview('${review.id}')">Edit</button>
+                                            <button class="btn-text" onclick="deleteReview('${review.id}')">Delete</button>
+                                        </div>` : ''}
+                                    </div>
+                                    ${review.comment ? `<p class="review-comment">${review.comment}</p>` : ''}
+                                    <div class="review-footer">
+                                        <button class="helpful-btn" onclick="markHelpful('${review.id}')">
+                                            👍 Helpful (${review.helpful || 0})
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('') : '<p class="no-reviews">No reviews yet. Be the first to review this template!</p>'}
+                        </div>
+                    </div>
                 </div>
             `;
         }
@@ -547,6 +747,146 @@
         function downloadCurrentTemplate() {
             if (currentTemplate) {
                 downloadTemplate(currentTemplate.id || Object.keys(currentTemplate)[0]);
+            }
+        }
+
+        // Favorites functionality
+        async function toggleFavorite(templateId) {
+            if (!currentUser) {
+                alert('Please sign in to add favorites');
+                return;
+            }
+
+            const isFavorited = currentUser.favorites && currentUser.favorites.includes(templateId);
+            const method = isFavorited ? 'DELETE' : 'POST';
+            const url = `/api/users/favorites/${templateId}`;
+
+            try {
+                const response = await fetch(url, { method });
+                if (response.ok) {
+                    // Update local state
+                    if (isFavorited) {
+                        currentUser.favorites = currentUser.favorites.filter(id => id !== templateId);
+                    } else {
+                        if (!currentUser.favorites) currentUser.favorites = [];
+                        currentUser.favorites.push(templateId);
+                    }
+                    // Re-render templates to update UI
+                    filterTemplates();
+                } else {
+                    throw new Error('Failed to update favorite');
+                }
+            } catch (error) {
+                console.error('Failed to toggle favorite:', error);
+                alert('Failed to update favorite. Please try again.');
+            }
+        }
+
+        async function showFavorites() {
+            if (!currentUser) {
+                alert('Please sign in to view favorites');
+                return;
+            }
+
+            document.getElementById('template-search').value = '';
+            document.getElementById('template-tags').value = '';
+            document.getElementById('template-featured').value = '';
+
+            const favoriteTemplates = allTemplates.filter(template =>
+                currentUser.favorites && currentUser.favorites.includes(template.id)
+            );
+
+            displayTemplates(favoriteTemplates);
+            document.getElementById('templates-section-title').textContent = 'Your Favorites';
+        }
+
+        // Review functionality
+        let selectedRating = 0;
+
+        function showReviewForm() {
+            document.getElementById('review-form').style.display = 'block';
+        }
+
+        function hideReviewForm() {
+            document.getElementById('review-form').style.display = 'none';
+            selectedRating = 0;
+            document.getElementById('review-comment').value = '';
+            updateStarDisplay();
+        }
+
+        function setRating(rating) {
+            selectedRating = rating;
+            updateStarDisplay();
+        }
+
+        function updateStarDisplay() {
+            const stars = document.querySelectorAll('#star-rating .star');
+            stars.forEach((star, index) => {
+                if (index < selectedRating) {
+                    star.textContent = '★';
+                    star.classList.add('selected');
+                } else {
+                    star.textContent = '☆';
+                    star.classList.remove('selected');
+                }
+            });
+        }
+
+        async function submitReview() {
+            if (!selectedRating) {
+                alert('Please select a rating');
+                return;
+            }
+
+            const comment = document.getElementById('review-comment').value.trim();
+
+            try {
+                const response = await fetch(`/api/templates/${currentTemplate.id}/reviews`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        rating: selectedRating,
+                        comment: comment
+                    })
+                });
+
+                if (response.ok) {
+                    hideReviewForm();
+                    // Refresh the modal content
+                    showTemplateDetail(currentTemplate.id);
+                    // Refresh the template rating in the main list
+                    const ratingResponse = await fetch(`/api/templates/${currentTemplate.id}/rating`);
+                    if (ratingResponse.ok) {
+                        const rating = await ratingResponse.json();
+                        templateRatings.set(currentTemplate.id, rating);
+                    }
+                    filterTemplates(); // Re-render to show updated rating
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Failed to submit review');
+                }
+            } catch (error) {
+                console.error('Failed to submit review:', error);
+                alert('Failed to submit review. Please try again.');
+            }
+        }
+
+        async function markHelpful(reviewId) {
+            try {
+                const response = await fetch(`/api/reviews/${reviewId}/helpful`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    // Refresh the modal content to show updated helpful count
+                    showTemplateDetail(currentTemplate.id);
+                } else {
+                    console.error('Failed to mark review as helpful');
+                }
+            } catch (error) {
+                console.error('Failed to mark review as helpful:', error);
             }
         }
 

@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -16,6 +18,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/github"
 )
 
 type Config struct {
@@ -66,6 +70,44 @@ type StoredConfig struct {
 	Public       bool            `json:"public" bson:"public"`
 	CreatedAt    time.Time       `json:"created_at" bson:"created_at"`
 	DownloadCount int            `json:"download_count" bson:"download_count"`
+	OwnerID      string          `json:"owner_id" bson:"owner_id"`
+}
+
+// User models
+type User struct {
+	ID           string    `json:"id" bson:"_id"`
+	GitHubID     int       `json:"github_id" bson:"github_id"`
+	Username     string    `json:"username" bson:"username"`
+	Name         string    `json:"name" bson:"name"`
+	Email        string    `json:"email" bson:"email"`
+	AvatarURL    string    `json:"avatar_url" bson:"avatar_url"`
+	Bio          string    `json:"bio" bson:"bio"`
+	Location     string    `json:"location" bson:"location"`
+	Website      string    `json:"website" bson:"website"`
+	CreatedAt    time.Time `json:"created_at" bson:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at" bson:"updated_at"`
+	Favorites    []string  `json:"favorites" bson:"favorites"`
+	Collections  []string  `json:"collections" bson:"collections"`
+}
+
+type Review struct {
+	ID         string    `json:"id" bson:"_id"`
+	TemplateID string    `json:"template_id" bson:"template_id"`
+	UserID     string    `json:"user_id" bson:"user_id"`
+	Username   string    `json:"username" bson:"username"`
+	AvatarURL  string    `json:"avatar_url" bson:"avatar_url"`
+	Rating     int       `json:"rating" bson:"rating"` // 1-5 stars
+	Comment    string    `json:"comment" bson:"comment"`
+	CreatedAt  time.Time `json:"created_at" bson:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at" bson:"updated_at"`
+	Helpful    int       `json:"helpful" bson:"helpful"` // helpful votes
+}
+
+type TemplateRating struct {
+	TemplateID   string  `json:"template_id" bson:"template_id"`
+	AverageRating float64 `json:"average_rating" bson:"average_rating"`
+	TotalRatings int     `json:"total_ratings" bson:"total_ratings"`
+	Distribution map[int]int `json:"distribution" bson:"distribution"` // rating -> count
 }
 
 // Storage interface
@@ -85,17 +127,50 @@ type TemplateStorage interface {
 	IncrementTemplateDownloads(id string) error
 }
 
+// User storage interface
+type UserStorage interface {
+	StoreUser(user *User) error
+	GetUser(id string) (*User, error)
+	GetUserByGitHubID(githubID int) (*User, error)
+	GetUserByUsername(username string) (*User, error)
+	UpdateUser(user *User) error
+	AddToFavorites(userID, templateID string) error
+	RemoveFromFavorites(userID, templateID string) error
+}
+
+// Review storage interface
+type ReviewStorage interface {
+	StoreReview(review *Review) error
+	GetReview(id string) (*Review, error)
+	GetReviewsByTemplate(templateID string) ([]*Review, error)
+	GetReviewsByUser(userID string) ([]*Review, error)
+	UpdateReview(review *Review) error
+	DeleteReview(id string) error
+	GetTemplateRating(templateID string) (*TemplateRating, error)
+	UpdateTemplateRating(templateID string) error
+}
+
 // In-memory storage (fallback)
 type MemoryStorage struct {
 	configs   map[string]*StoredConfig
 	templates map[string]*StoredTemplate
+	users     map[string]*User
+	reviews   map[string]*Review
 	mu        sync.RWMutex
 }
+
+// OAuth configuration
+var (
+	oauthConfig *oauth2.Config
+	oauthStateString = "randomstate"
+)
 
 func NewMemoryStorage() *MemoryStorage {
 	return &MemoryStorage{
 		configs:   make(map[string]*StoredConfig),
 		templates: make(map[string]*StoredTemplate),
+		users:     make(map[string]*User),
+		reviews:   make(map[string]*Review),
 	}
 }
 
@@ -244,6 +319,188 @@ func (m *MemoryStorage) IncrementTemplateDownloads(id string) error {
 	if template, exists := m.templates[id]; exists {
 		template.Downloads++
 	}
+	return nil
+}
+
+// User methods for MemoryStorage
+func (m *MemoryStorage) StoreUser(user *User) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.users[user.ID] = user
+	return nil
+}
+
+func (m *MemoryStorage) GetUser(id string) (*User, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	user, exists := m.users[id]
+	if !exists {
+		return nil, fmt.Errorf("user not found")
+	}
+	return user, nil
+}
+
+func (m *MemoryStorage) GetUserByGitHubID(githubID int) (*User, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, user := range m.users {
+		if user.GitHubID == githubID {
+			return user, nil
+		}
+	}
+	return nil, fmt.Errorf("user not found")
+}
+
+func (m *MemoryStorage) GetUserByUsername(username string) (*User, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, user := range m.users {
+		if user.Username == username {
+			return user, nil
+		}
+	}
+	return nil, fmt.Errorf("user not found")
+}
+
+func (m *MemoryStorage) UpdateUser(user *User) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, exists := m.users[user.ID]; exists {
+		user.UpdatedAt = time.Now()
+		m.users[user.ID] = user
+		return nil
+	}
+	return fmt.Errorf("user not found")
+}
+
+func (m *MemoryStorage) AddToFavorites(userID, templateID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if user, exists := m.users[userID]; exists {
+		// Check if already favorited
+		for _, fav := range user.Favorites {
+			if fav == templateID {
+				return nil // Already favorited
+			}
+		}
+		user.Favorites = append(user.Favorites, templateID)
+		user.UpdatedAt = time.Now()
+		return nil
+	}
+	return fmt.Errorf("user not found")
+}
+
+func (m *MemoryStorage) RemoveFromFavorites(userID, templateID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if user, exists := m.users[userID]; exists {
+		for i, fav := range user.Favorites {
+			if fav == templateID {
+				user.Favorites = append(user.Favorites[:i], user.Favorites[i+1:]...)
+				user.UpdatedAt = time.Now()
+				break
+			}
+		}
+		return nil
+	}
+	return fmt.Errorf("user not found")
+}
+
+// Review methods for MemoryStorage
+func (m *MemoryStorage) StoreReview(review *Review) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.reviews[review.ID] = review
+	return nil
+}
+
+func (m *MemoryStorage) GetReview(id string) (*Review, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	review, exists := m.reviews[id]
+	if !exists {
+		return nil, fmt.Errorf("review not found")
+	}
+	return review, nil
+}
+
+func (m *MemoryStorage) GetReviewsByTemplate(templateID string) ([]*Review, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var reviews []*Review
+	for _, review := range m.reviews {
+		if review.TemplateID == templateID {
+			reviews = append(reviews, review)
+		}
+	}
+	return reviews, nil
+}
+
+func (m *MemoryStorage) GetReviewsByUser(userID string) ([]*Review, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var reviews []*Review
+	for _, review := range m.reviews {
+		if review.UserID == userID {
+			reviews = append(reviews, review)
+		}
+	}
+	return reviews, nil
+}
+
+func (m *MemoryStorage) UpdateReview(review *Review) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, exists := m.reviews[review.ID]; exists {
+		review.UpdatedAt = time.Now()
+		m.reviews[review.ID] = review
+		return nil
+	}
+	return fmt.Errorf("review not found")
+}
+
+func (m *MemoryStorage) DeleteReview(id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.reviews, id)
+	return nil
+}
+
+func (m *MemoryStorage) GetTemplateRating(templateID string) (*TemplateRating, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	var totalRating float64
+	var count int
+	distribution := make(map[int]int)
+
+	for _, review := range m.reviews {
+		if review.TemplateID == templateID {
+			totalRating += float64(review.Rating)
+			count++
+			distribution[review.Rating]++
+		}
+	}
+
+	if count == 0 {
+		return &TemplateRating{
+			TemplateID:    templateID,
+			AverageRating: 0,
+			TotalRatings:  0,
+			Distribution:  distribution,
+		}, nil
+	}
+
+	return &TemplateRating{
+		TemplateID:    templateID,
+		AverageRating: totalRating / float64(count),
+		TotalRatings:  count,
+		Distribution:  distribution,
+	}, nil
+}
+
+func (m *MemoryStorage) UpdateTemplateRating(templateID string) error {
+	// For memory storage, ratings are calculated on-the-fly
 	return nil
 }
 
@@ -458,8 +715,87 @@ func (m *MongoStorage) IncrementTemplateDownloads(id string) error {
 	return err
 }
 
+// User methods for MongoStorage - stub implementations
+func (m *MongoStorage) StoreUser(user *User) error {
+	// TODO: Implement MongoDB user storage
+	return fmt.Errorf("user storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) GetUser(id string) (*User, error) {
+	// TODO: Implement MongoDB user retrieval
+	return nil, fmt.Errorf("user storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) GetUserByGitHubID(githubID int) (*User, error) {
+	// TODO: Implement MongoDB user retrieval by GitHub ID
+	return nil, fmt.Errorf("user storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) GetUserByUsername(username string) (*User, error) {
+	// TODO: Implement MongoDB user retrieval by username
+	return nil, fmt.Errorf("user storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) UpdateUser(user *User) error {
+	// TODO: Implement MongoDB user update
+	return fmt.Errorf("user storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) AddToFavorites(userID, templateID string) error {
+	// TODO: Implement MongoDB favorites functionality
+	return fmt.Errorf("favorites not implemented for MongoDB")
+}
+
+func (m *MongoStorage) RemoveFromFavorites(userID, templateID string) error {
+	// TODO: Implement MongoDB favorites functionality
+	return fmt.Errorf("favorites not implemented for MongoDB")
+}
+
+// Review methods for MongoStorage - stub implementations
+func (m *MongoStorage) StoreReview(review *Review) error {
+	// TODO: Implement MongoDB review storage
+	return fmt.Errorf("review storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) GetReview(id string) (*Review, error) {
+	// TODO: Implement MongoDB review retrieval
+	return nil, fmt.Errorf("review storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) GetReviewsByTemplate(templateID string) ([]*Review, error) {
+	// TODO: Implement MongoDB review retrieval by template
+	return nil, fmt.Errorf("review storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) GetReviewsByUser(userID string) ([]*Review, error) {
+	// TODO: Implement MongoDB review retrieval by user
+	return nil, fmt.Errorf("review storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) UpdateReview(review *Review) error {
+	// TODO: Implement MongoDB review update
+	return fmt.Errorf("review storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) DeleteReview(id string) error {
+	// TODO: Implement MongoDB review deletion
+	return fmt.Errorf("review storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) GetTemplateRating(templateID string) (*TemplateRating, error) {
+	// TODO: Implement MongoDB template rating retrieval
+	return nil, fmt.Errorf("rating storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) UpdateTemplateRating(templateID string) error {
+	// TODO: Implement MongoDB template rating update
+	return fmt.Errorf("rating storage not implemented for MongoDB")
+}
+
 var storage ConfigStorage
 var templateStorage TemplateStorage
+var userStorage UserStorage
+var reviewStorage ReviewStorage
 
 func seedTemplates() {
 	// Check if we already have templates
@@ -672,6 +1008,20 @@ func seedData() {
 }
 
 func main() {
+	// Initialize OAuth configuration
+	oauthConfig = &oauth2.Config{
+		ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
+		ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
+		RedirectURL:  os.Getenv("OAUTH_REDIRECT_URL"),
+		Scopes:       []string{"user:email"},
+		Endpoint:     github.Endpoint,
+	}
+
+	// Generate secure random state string
+	b := make([]byte, 32)
+	rand.Read(b)
+	oauthStateString = base64.URLEncoding.EncodeToString(b)
+
 	// Initialize storage (MongoDB or fallback to memory)
 	mongoURI := os.Getenv("MONGODB_URI")
 	if mongoURI != "" {
@@ -686,15 +1036,21 @@ func main() {
 			memStorage := NewMemoryStorage()
 			storage = memStorage
 			templateStorage = memStorage
+			userStorage = memStorage
+			reviewStorage = memStorage
 		} else {
 			storage = mongoStorage
 			templateStorage = mongoStorage
+			userStorage = mongoStorage
+			reviewStorage = mongoStorage
 			log.Println("Connected to MongoDB successfully")
 		}
 	} else {
 		memStorage := NewMemoryStorage()
 		storage = memStorage
 		templateStorage = memStorage
+		userStorage = memStorage
+		reviewStorage = memStorage
 		log.Println("Using in-memory storage (set MONGODB_URI for persistent storage)")
 	}
 
@@ -732,6 +1088,15 @@ func main() {
 		c.File("./static/index.html")
 	})
 
+	// Authentication routes
+	auth := r.Group("/auth")
+	{
+		auth.GET("/github", githubLogin)
+		auth.GET("/github/callback", githubCallback)
+		auth.GET("/logout", logout)
+		auth.GET("/user", getCurrentUser)
+	}
+
 	// API routes
 	api := r.Group("/api")
 	{
@@ -756,6 +1121,19 @@ func main() {
 		api.GET("/templates", getTemplates)
 		api.GET("/templates/:id", getTemplate)
 		api.GET("/templates/:id/download", downloadTemplate)
+		api.GET("/templates/:id/reviews", getTemplateReviews)
+		api.POST("/templates/:id/reviews", authRequired(), createReview)
+		api.GET("/templates/:id/rating", getTemplateRating)
+
+		// User endpoints
+		api.GET("/users/:username", getUserProfile)
+		api.POST("/users/favorites/:templateId", authRequired(), addToFavorites)
+		api.DELETE("/users/favorites/:templateId", authRequired(), removeFromFavorites)
+
+		// Review endpoints
+		api.PUT("/reviews/:id", authRequired(), updateReview)
+		api.DELETE("/reviews/:id", authRequired(), deleteReview)
+		api.POST("/reviews/:id/helpful", authRequired(), markReviewHelpful)
 	}
 
 	// Web interface routes
@@ -1063,4 +1441,359 @@ func getTemplates(c *gin.Context) {
 		"templates": results,
 		"total":     len(results),
 	})
+}
+
+// Authentication handlers
+func githubLogin(c *gin.Context) {
+	// Check if OAuth is configured
+	if oauthConfig.ClientID == "" {
+		c.JSON(400, gin.H{
+			"error": "GitHub OAuth not configured",
+			"message": "Please set GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, and OAUTH_REDIRECT_URL environment variables to enable GitHub authentication."})
+		return
+	}
+
+	url := oauthConfig.AuthCodeURL(oauthStateString, oauth2.AccessTypeOffline)
+	c.Redirect(http.StatusTemporaryRedirect, url)
+}
+
+func githubCallback(c *gin.Context) {
+	state := c.Query("state")
+	if state != oauthStateString {
+		c.JSON(400, gin.H{"error": "Invalid OAuth state"})
+		return
+	}
+
+	code := c.Query("code")
+	token, err := oauthConfig.Exchange(context.Background(), code)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Failed to exchange OAuth code"})
+		return
+	}
+
+	// Get user info from GitHub
+	client := oauthConfig.Client(context.Background(), token)
+	resp, err := client.Get("https://api.github.com/user")
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to get user info"})
+		return
+	}
+	defer resp.Body.Close()
+
+	var githubUser struct {
+		ID        int    `json:"id"`
+		Login     string `json:"login"`
+		Name      string `json:"name"`
+		Email     string `json:"email"`
+		AvatarURL string `json:"avatar_url"`
+		Bio       string `json:"bio"`
+		Location  string `json:"location"`
+		Blog      string `json:"blog"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&githubUser); err != nil {
+		c.JSON(500, gin.H{"error": "Failed to decode user info"})
+		return
+	}
+
+	// Check if user exists
+	user, err := userStorage.GetUserByGitHubID(githubUser.ID)
+	if err != nil {
+		// Create new user
+		user = &User{
+			ID:        uuid.New().String(),
+			GitHubID:  githubUser.ID,
+			Username:  githubUser.Login,
+			Name:      githubUser.Name,
+			Email:     githubUser.Email,
+			AvatarURL: githubUser.AvatarURL,
+			Bio:       githubUser.Bio,
+			Location:  githubUser.Location,
+			Website:   githubUser.Blog,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			Favorites: []string{},
+		}
+		userStorage.StoreUser(user)
+	} else {
+		// Update existing user
+		user.Name = githubUser.Name
+		user.Email = githubUser.Email
+		user.AvatarURL = githubUser.AvatarURL
+		user.Bio = githubUser.Bio
+		user.Location = githubUser.Location
+		user.Website = githubUser.Blog
+		user.UpdatedAt = time.Now()
+		userStorage.UpdateUser(user)
+	}
+
+	// Set session (simple approach with secure cookies)
+	c.SetCookie("user_id", user.ID, 3600*24*30, "/", "", false, true) // 30 days
+
+	c.Redirect(http.StatusTemporaryRedirect, "/")
+}
+
+func logout(c *gin.Context) {
+	c.SetCookie("user_id", "", -1, "/", "", false, true)
+	c.Redirect(http.StatusTemporaryRedirect, "/")
+}
+
+func getCurrentUser(c *gin.Context) {
+	// Check if OAuth is configured
+	if oauthConfig.ClientID == "" {
+		c.JSON(401, gin.H{
+			"error": "GitHub OAuth not configured",
+			"configured": false,
+			"message": "Authentication is not available. Please configure GitHub OAuth to enable user features."})
+		return
+	}
+
+	userID, err := c.Cookie("user_id")
+	if err != nil {
+		c.JSON(401, gin.H{"error": "Not authenticated", "configured": true})
+		return
+	}
+
+	user, err := userStorage.GetUser(userID)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "User not found", "configured": true})
+		return
+	}
+
+	c.JSON(200, user)
+}
+
+// Authentication middleware
+func authRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, err := c.Cookie("user_id")
+		if err != nil {
+			c.JSON(401, gin.H{"error": "Authentication required"})
+			c.Abort()
+			return
+		}
+
+		user, err := userStorage.GetUser(userID)
+		if err != nil {
+			c.JSON(401, gin.H{"error": "Invalid authentication"})
+			c.Abort()
+			return
+		}
+
+		c.Set("user", user)
+		c.Next()
+	}
+}
+
+// Review handlers
+func getTemplateReviews(c *gin.Context) {
+	templateID := c.Param("id")
+	reviews, err := reviewStorage.GetReviewsByTemplate(templateID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to get reviews"})
+		return
+	}
+
+	c.JSON(200, gin.H{"reviews": reviews})
+}
+
+func createReview(c *gin.Context) {
+	templateID := c.Param("id")
+	user := c.MustGet("user").(*User)
+
+	var req struct {
+		Rating  int    `json:"rating" binding:"required,min=1,max=5"`
+		Comment string `json:"comment"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid request", "details": err.Error()})
+		return
+	}
+
+	// Check if user already reviewed this template
+	userReviews, err := reviewStorage.GetReviewsByUser(user.ID)
+	if err == nil {
+		for _, review := range userReviews {
+			if review.TemplateID == templateID {
+				c.JSON(400, gin.H{"error": "You have already reviewed this template"})
+				return
+			}
+		}
+	}
+
+	review := &Review{
+		ID:         uuid.New().String(),
+		TemplateID: templateID,
+		UserID:     user.ID,
+		Username:   user.Username,
+		AvatarURL:  user.AvatarURL,
+		Rating:     req.Rating,
+		Comment:    req.Comment,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+		Helpful:    0,
+	}
+
+	if err := reviewStorage.StoreReview(review); err != nil {
+		c.JSON(500, gin.H{"error": "Failed to create review"})
+		return
+	}
+
+	// Update template rating
+	reviewStorage.UpdateTemplateRating(templateID)
+
+	c.JSON(201, review)
+}
+
+func getTemplateRating(c *gin.Context) {
+	templateID := c.Param("id")
+	rating, err := reviewStorage.GetTemplateRating(templateID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to get rating"})
+		return
+	}
+
+	c.JSON(200, rating)
+}
+
+func updateReview(c *gin.Context) {
+	reviewID := c.Param("id")
+	user := c.MustGet("user").(*User)
+
+	review, err := reviewStorage.GetReview(reviewID)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Review not found"})
+		return
+	}
+
+	if review.UserID != user.ID {
+		c.JSON(403, gin.H{"error": "Not authorized to update this review"})
+		return
+	}
+
+	var req struct {
+		Rating  int    `json:"rating" binding:"required,min=1,max=5"`
+		Comment string `json:"comment"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid request", "details": err.Error()})
+		return
+	}
+
+	review.Rating = req.Rating
+	review.Comment = req.Comment
+	review.UpdatedAt = time.Now()
+
+	if err := reviewStorage.UpdateReview(review); err != nil {
+		c.JSON(500, gin.H{"error": "Failed to update review"})
+		return
+	}
+
+	// Update template rating
+	reviewStorage.UpdateTemplateRating(review.TemplateID)
+
+	c.JSON(200, review)
+}
+
+func deleteReview(c *gin.Context) {
+	reviewID := c.Param("id")
+	user := c.MustGet("user").(*User)
+
+	review, err := reviewStorage.GetReview(reviewID)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Review not found"})
+		return
+	}
+
+	if review.UserID != user.ID {
+		c.JSON(403, gin.H{"error": "Not authorized to delete this review"})
+		return
+	}
+
+	if err := reviewStorage.DeleteReview(reviewID); err != nil {
+		c.JSON(500, gin.H{"error": "Failed to delete review"})
+		return
+	}
+
+	// Update template rating
+	reviewStorage.UpdateTemplateRating(review.TemplateID)
+
+	c.JSON(200, gin.H{"message": "Review deleted successfully"})
+}
+
+func markReviewHelpful(c *gin.Context) {
+	reviewID := c.Param("id")
+
+	review, err := reviewStorage.GetReview(reviewID)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Review not found"})
+		return
+	}
+
+	review.Helpful++
+	if err := reviewStorage.UpdateReview(review); err != nil {
+		c.JSON(500, gin.H{"error": "Failed to update review"})
+		return
+	}
+
+	c.JSON(200, gin.H{"helpful": review.Helpful})
+}
+
+// User profile handlers
+func getUserProfile(c *gin.Context) {
+	username := c.Param("username")
+	user, err := userStorage.GetUserByUsername(username)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Get user's reviews
+	reviews, _ := reviewStorage.GetReviewsByUser(user.ID)
+
+	// Get user's favorite templates
+	var favoriteTemplates []*StoredTemplate
+	for _, templateID := range user.Favorites {
+		if template, err := templateStorage.GetTemplate(templateID); err == nil {
+			favoriteTemplates = append(favoriteTemplates, template)
+		}
+	}
+
+	c.JSON(200, gin.H{
+		"user":              user,
+		"reviews":           reviews,
+		"favoriteTemplates": favoriteTemplates,
+	})
+}
+
+func addToFavorites(c *gin.Context) {
+	templateID := c.Param("templateId")
+	user := c.MustGet("user").(*User)
+
+	// Verify template exists
+	if _, err := templateStorage.GetTemplate(templateID); err != nil {
+		c.JSON(404, gin.H{"error": "Template not found"})
+		return
+	}
+
+	if err := userStorage.AddToFavorites(user.ID, templateID); err != nil {
+		c.JSON(500, gin.H{"error": "Failed to add to favorites"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Added to favorites"})
+}
+
+func removeFromFavorites(c *gin.Context) {
+	templateID := c.Param("templateId")
+	user := c.MustGet("user").(*User)
+
+	if err := userStorage.RemoveFromFavorites(user.ID, templateID); err != nil {
+		c.JSON(500, gin.H{"error": "Failed to remove from favorites"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Removed from favorites"})
 }
