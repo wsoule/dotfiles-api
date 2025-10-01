@@ -1,6 +1,7 @@
 let allConfigs = [];
 let allTemplates = [];
 
+
 // Navigation functionality
 function switchTab(tabName) {
     // Remove active class from all tabs and sections

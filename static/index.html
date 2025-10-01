@@ -5,14 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dotfiles Manager - Developer Onboarding Toolkit</title>
     <link rel="stylesheet" href="/static/styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/universal-header.css">
 </head>
 <body>
+    <!-- Universal Header -->
+    <header class="universal-header">
+        <div class="header-container">
+            <a href="/" class="header-brand">
+                Dotfiles Manager
+            </a>
+            <nav class="header-nav">
+                <a href="/" class="active">Home</a>
+                <a href="/templates">Templates</a>
+                <a href="/docs">Documentation</a>
+            </nav>
+            <div class="header-attribution">
+                <span>Created by Wyat Soule</span>
+                <a href="https://github.com/wsoule" target="_blank">GitHub</a>
+                <a href="https://github.com/wsoule/go-dotfiles" target="_blank">Repository</a>
+            </div>
+        </div>
+    </header>
+
     <div class="container">
         <!-- Hero Section -->
         <div class="hero">
             <div class="hero-content">
-                <div class="hero-badge">🚀 Developer Onboarding Toolkit</div>
+                <div class="hero-badge">Developer Onboarding Toolkit</div>
                 <h1 class="hero-title">
                     Dotfiles Manager
                     <span class="hero-subtitle">The complete solution for new developer environment setup</span>
@@ -24,7 +43,7 @@
 
                 <div class="hero-actions">
                     <div class="install-section">
-                        <div class="install-title">🍺 Quick Install</div>
+                        <div class="install-title">Quick Install</div>
                         <div class="install-command">
                             <code id="install-cmd">brew tap wsoule/tap && brew install dotfiles</code>
                             <button class="copy-btn" onclick="copyInstallCommand()">Copy</button>
@@ -35,8 +54,8 @@
                     </div>
 
                     <div class="hero-buttons">
-                        <a href="#templates" class="btn btn-primary">🔍 Browse Templates</a>
-                        <a href="https://github.com/wsoule/new-dotfiles" class="btn btn-secondary" target="_blank">📚 View Documentation</a>
+                        <a href="#templates" class="btn btn-primary">Browse Templates</a>
+                        <a href="/docs" class="btn btn-secondary">View Documentation</a>
                     </div>
                 </div>
             </div>
@@ -75,25 +94,109 @@
             </div>
         </div>
 
+        <!-- Use Cases Section -->
+        <div class="use-cases">
+            <h2>Perfect For</h2>
+            <div class="accordion">
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h3>New Team Members</h3>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <p>Get new developers up and running with your team's exact development environment in minutes instead of days.</p>
+                            <code>dotfiles onboard --email new.dev@company.com</code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h3>Bootcamp Students</h3>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <p>Pre-configured development environments for different programming languages and frameworks.</p>
+                            <code>dotfiles clone template:web-dev</code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h3>DevOps Teams</h3>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <p>Standardize tooling and configurations across your entire infrastructure team.</p>
+                            <code>dotfiles clone template:devops</code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h3>Data Scientists</h3>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <p>Complete Python, R, and Jupyter environment setup with all the tools you need for analysis.</p>
+                            <code>dotfiles clone template:data-science</code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h3>Mobile Developers</h3>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <p>iOS and Android development environment with Flutter, React Native, and native toolchains.</p>
+                            <code>dotfiles clone template:mobile-dev</code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h3>Personal Setup</h3>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <p>Backup and restore your personal development environment across multiple machines.</p>
+                            <code>dotfiles backup ~/my-setup.json</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Quick Start Section -->
         <div class="quick-start">
-            <h2>🚀 Quick Start</h2>
+            <h2>Quick Start</h2>
             <div class="quick-start-grid">
                 <div class="start-option">
                     <div class="start-number">1</div>
-                    <h3>🆕 New Developer Onboarding</h3>
+                    <h3>New Developer Onboarding</h3>
                     <code>dotfiles onboard --email your@email.com</code>
                     <p>Complete setup with GitHub SSH, essential packages, and configuration</p>
                 </div>
                 <div class="start-option">
                     <div class="start-number">2</div>
-                    <h3>📚 Use a Template</h3>
+                    <h3>Use a Template</h3>
                     <code>dotfiles clone template:web-dev</code>
                     <p>Start with a pre-built template for your development stack</p>
                 </div>
                 <div class="start-option">
                     <div class="start-number">3</div>
-                    <h3>🔧 Manual Setup</h3>
+                    <h3>Manual Setup</h3>
                     <code>dotfiles init && dotfiles add git curl</code>
                     <p>Build your configuration step by step</p>
                 </div>
@@ -102,9 +205,9 @@
 
         <!-- Navigation -->
         <div class="nav-tabs" id="templates">
-            <button class="nav-tab active" onclick="switchTab('templates')">📚 Featured Templates</button>
-            <button class="nav-tab" onclick="switchTab('configs')">🔍 Community Configs</button>
-            <button class="nav-tab" onclick="switchTab('create-template')">➕ Create Template</button>
+            <button class="nav-tab active" onclick="switchTab('templates')">Featured Templates</button>
+            <button class="nav-tab" onclick="switchTab('configs')">Community Configs</button>
+            <button class="nav-tab" onclick="switchTab('create-template')">Create Template</button>
         </div>
 
         <!-- Templates Section -->
@@ -135,7 +238,7 @@
         <div id="configs-section" class="content-section">
             <div class="upload-instructions">
                 <details>
-                    <summary>📤 How to Upload Your Config</summary>
+                    <summary>How to Upload Your Config</summary>
                     <div class="instructions-content">
                         <h3>1. Share via CLI (Recommended)</h3>
                         <p>Use your dotfiles CLI tool to share your configuration:</p>
@@ -189,7 +292,7 @@
         <div id="create-template-section" class="content-section">
             <div class="create-template-container">
                 <div class="form-header">
-                    <h2>🚀 Create New Template</h2>
+                    <h2>Create New Template</h2>
                     <p>Share your development setup with the community. Create a reusable template that others can build upon.</p>
                 </div>
 
@@ -216,7 +319,7 @@
                     <form id="template-form">
                         <!-- Step 1: Basic Information -->
                         <div class="form-step active" data-step="1">
-                            <h3>📝 Basic Information</h3>
+                            <h3>Basic Information</h3>
                             <div class="step-description">
                                 Give your template a name and description that clearly explains its purpose.
                             </div>
@@ -271,7 +374,7 @@
 
                         <!-- Step 2: Packages -->
                         <div class="form-step" data-step="2">
-                            <h3>📦 Package Configuration</h3>
+                            <h3>Package Configuration</h3>
                             <div class="step-description">
                                 Define the packages that will be installed with your template.
                             </div>
@@ -279,7 +382,7 @@
                             <div class="package-sections">
                                 <div class="package-section">
                                     <div class="package-header">
-                                        <h4>🍺 Homebrew Packages</h4>
+                                        <h4>Homebrew Packages</h4>
                                         <div class="package-info">Command-line tools and libraries</div>
                                     </div>
                                     <div class="package-input-group">
@@ -302,7 +405,7 @@
 
                                 <div class="package-section">
                                     <div class="package-header">
-                                        <h4>📱 Homebrew Casks</h4>
+                                        <h4>Homebrew Casks</h4>
                                         <div class="package-info">GUI applications</div>
                                     </div>
                                     <div class="package-input-group">
@@ -324,7 +427,7 @@
                                 <div class="form-row">
                                     <div class="package-section">
                                         <div class="package-header">
-                                            <h4>🔗 Homebrew Taps</h4>
+                                            <h4>Homebrew Taps</h4>
                                             <div class="package-info">Additional repositories</div>
                                         </div>
                                         <div class="package-input-group">
@@ -337,7 +440,7 @@
 
                                     <div class="package-section">
                                         <div class="package-header">
-                                            <h4>📁 Stow Packages</h4>
+                                            <h4>Stow Packages</h4>
                                             <div class="package-info">Dotfile configurations</div>
                                         </div>
                                         <div class="package-input-group">
@@ -353,14 +456,14 @@
 
                         <!-- Step 3: Advanced Options -->
                         <div class="form-step" data-step="3">
-                            <h3>⚙️ Advanced Options</h3>
+                            <h3>Advanced Options</h3>
                             <div class="step-description">
                                 Configure template inheritance and behavior (optional).
                             </div>
 
                             <div class="advanced-options">
                                 <div class="option-card">
-                                    <h4>🏗️ Template Inheritance</h4>
+                                    <h4>Template Inheritance</h4>
                                     <div class="form-group">
                                         <label for="template-extends">Extends Template</label>
                                         <select id="template-extends">
@@ -392,7 +495,7 @@
                                 </div>
 
                                 <div class="option-card">
-                                    <h4>🔧 Behavior Settings</h4>
+                                    <h4>Behavior Settings</h4>
                                     <div class="setting-group">
                                         <label class="setting-toggle">
                                             <input type="checkbox" id="template-public" checked>
@@ -418,7 +521,7 @@
 
                         <!-- Step 4: Preview -->
                         <div class="form-step" data-step="4">
-                            <h3>👀 Preview Template</h3>
+                            <h3>Preview Template</h3>
                             <div class="step-description">
                                 Review your template before creating it.
                             </div>
@@ -438,7 +541,7 @@
                                 Next →
                             </button>
                             <button type="submit" id="submit-btn" class="nav-btn primary" style="display:none;">
-                                🚀 Create Template
+                                Create Template
                             </button>
                         </div>
                     </form>

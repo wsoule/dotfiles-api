@@ -1,0 +1,107 @@
+/* Universal Header Styles - Uses main theme variables */
+
+/* Universal header-specific styles only - base styles come from main CSS */
+
+.universal-header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding: 15px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: var(--shadow-sm);
+}
+
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.header-brand:hover {
+    color: var(--accent-secondary);
+    transform: translateY(-1px);
+}
+
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+.header-nav a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: color 0.2s ease;
+}
+
+.header-nav a:hover {
+    color: var(--accent-secondary);
+    transform: translateY(-1px);
+}
+
+.header-nav a.active {
+    color: var(--accent-primary);
+    background: var(--bg-hover);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    box-shadow: var(--shadow-sm);
+}
+
+.header-attribution {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.header-attribution a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.header-attribution a:hover {
+    color: var(--accent-purple-light);
+}
+
+@media (max-width: 768px) {
+    .header-container {
+        flex-direction: column;
+        gap: 10px;
+        padding: 0 15px;
+    }
+
+    .header-nav {
+        gap: 20px;
+    }
+
+    .header-attribution {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-nav {
+        flex-direction: column;
+        gap: 10px;
+    }
+}

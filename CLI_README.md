@@ -1,53 +1,51 @@
-# 🚀 Dotfiles Manager - Developer Onboarding Toolkit
-
-> The complete solution for new developer environment setup
+# Dotfiles Manager - Developer Onboarding Toolkit
 
 A comprehensive command-line tool that manages your entire development environment: Homebrew packages, dotfiles with GNU Stow, GitHub SSH setup, and complete developer onboarding automation.
 
 ## Features
 
-- 🎉 **Complete Developer Onboarding** - One command to set up everything for new developers
-- 🔐 **GitHub SSH Integration** - Automated SSH key generation and GitHub configuration
-- 📦 **Smart Package Management** - Curated essential packages for developers
-- 🤝 **Configuration Sharing** - Share and discover configs via GitHub Gist
-- 📚 **Template Library** - Pre-built configs for web-dev, data science, DevOps, and more
-- 🌍 **Community Discovery** - Find and browse configurations from other developers
-- 📋 **JSON Configuration** - Store your setup in simple, versionable JSON
-- 🍺 **Brewfile Support** - Generate and import Brewfiles with full automation
-- 🔗 **GNU Stow Integration** - Manage dotfiles with symbolic links
-- 📊 **Status Checking** - Verify installation status across all components
-- 💾 **Backup & Restore** - Save and restore complete configurations
-- 🔍 **Multiple Output Formats** - JSON, count, and filtered views
-- 📦 **Easy Distribution** - Install via Homebrew or direct from GitHub
-- ✨ **Zero Configuration** - Works out of the box with sensible defaults
-- 🚀 **Fast & Lightweight** - Single binary, comprehensive functionality
+- Complete Developer Onboarding - One command to set up everything for new developers
+- GitHub SSH Integration - Automated SSH key generation and GitHub configuration
+- Smart Package Management - Curated essential packages for developers
+- Configuration Sharing - Share and discover configs via GitHub Gist
+- Template Library - Pre-built configs for web-dev, data science, DevOps, and more
+- Community Discovery - Find and browse configurations from other developers
+- JSON Configuration - Store your setup in simple, versionable JSON
+- Brewfile Support - Generate and import Brewfiles with full automation
+- GNU Stow Integration - Manage dotfiles with symbolic links
+- Status Checking - Verify installation status across all components
+- Backup & Restore - Save and restore complete configurations
+- Multiple Output Formats - JSON, count, and filtered views
+- Easy Distribution - Install via Homebrew or direct from GitHub
+- Zero Configuration - Works out of the box with sensible defaults
+- Fast & Lightweight - Single binary, comprehensive functionality
 
-## 📦 Installation
+## Installation
 
-### 🍺 Homebrew (Recommended)
+### Homebrew (Recommended)
 ```bash
 brew tap wsoule/tap
 brew install dotfiles
 ```
 
-### 🚀 One-liner Install
+### One-liner Install
 ```bash
 curl -fsSL https://raw.githubusercontent.com/wsoule/go-dotfiles/main/install.sh | bash
 ```
 
-### 📦 GitHub Releases
+### GitHub Releases
 Download the latest binary from [releases](https://github.com/wsoule/go-dotfiles/releases/latest)
 
-### 🔨 Build from Source
+### Build from Source
 ```bash
 git clone https://github.com/wsoule/go-dotfiles.git
 cd go-dotfiles
 go build -o dotfiles
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
-### 🆕 Setup from a Repository (Recommended)
+### Setup from a Repository (Recommended)
 ```bash
 # Setup dotfiles from your GitHub repository
 dotfiles setup https://github.com/your-username/your-dotfiles.git
@@ -59,7 +57,7 @@ dotfiles setup https://github.com/your-username/your-dotfiles.git
 # - Set up proper directory structure
 ```
 
-### 🎯 For New Developers (Complete Setup)
+### For New Developers (Complete Setup)
 ```bash
 # Complete onboarding with everything included
 dotfiles onboard
@@ -74,7 +72,7 @@ This single command will:
 - Install essential development packages
 - Guide you through next steps
 
-### 🔧 Manual Setup (Step by Step)
+### Manual Setup (Step by Step)
 
 1. **Initialize configuration:**
    ```bash
@@ -100,21 +98,21 @@ This single command will:
    dotfiles stow vim zsh # Creates dotfile symlinks
    ```
 
-## 📋 Available Commands
+## Available Commands
 
 ```
 Usage:
   dotfiles [command]
 
 Available Commands:
-  setup       Fork and setup a dotfiles repository                 🆕 NEW!
-  onboard     Complete developer onboarding and environment setup  🎯 NEW!
-  github      Set up GitHub with SSH keys                          🔐 NEW!
-  private     Add private files to stow packages                   🔒 NEW!
-  share       Share your configuration with others                 🤝 NEW!
-  clone       Clone a shared configuration                         📥 NEW!
-  templates   Create, manage and discover templates                📚 ENHANCED!
-  discover    Discover shared configurations from community        🔍 NEW!
+  setup       Fork and setup a dotfiles repository
+  onboard     Complete developer onboarding and environment setup
+  github      Set up GitHub with SSH keys
+  private     Add private files to stow packages
+  share       Share your configuration with others
+  clone       Clone a shared configuration
+  templates   Create, manage and discover templates
+  discover    Discover shared configurations from community
   add         Add packages to your configuration
   backup      Backup your configuration to a file
   brewfile    Generate a Brewfile from your configuration
@@ -130,18 +128,18 @@ Available Commands:
   unstow      Unstow dotfile packages using GNU Stow
 ```
 
-## 🎯 Developer Onboarding
+## Developer Onboarding
 
 Perfect for new developers or setting up fresh machines:
 
 ### What the onboard command does:
-1. **🔧 Initializes** your dotfiles configuration
-2. **🔐 Creates** GitHub SSH keys and shows setup instructions
-3. **📦 Installs** curated essential packages:
-   - **Development tools**: git, curl, wget, tree, jq, gh
-   - **Applications**: Visual Studio Code, iTerm2, Rectangle
-   - **GNU Stow** for dotfiles management
-4. **📋 Guides** you through next steps
+1. Initializes your dotfiles configuration
+2. Creates GitHub SSH keys and shows setup instructions
+3. Installs curated essential packages:
+   - Development tools: git, curl, wget, tree, jq, gh
+   - Applications: Visual Studio Code, iTerm2, Rectangle
+   - GNU Stow for dotfiles management
+4. Guides you through next steps
 
 ### Essential packages included:
 ```bash
@@ -157,11 +155,11 @@ visual-studio-code, ghostty, raycast
 
 You can customize this list after onboarding with `dotfiles add` and `dotfiles remove`.
 
-## 🤝 Configuration Sharing & Templates
+## Configuration Sharing & Templates
 
 Share your perfect development setup with others and discover configurations from the community!
 
-### 🎯 Using Templates (Quick Start)
+### Using Templates (Quick Start)
 
 Choose from pre-built templates for different development workflows:
 
@@ -175,10 +173,10 @@ dotfiles templates show web-dev
 # Apply a template
 dotfiles clone template:web-dev
 
-# Discover community templates 🆕
+# Discover community templates
 dotfiles templates discover --search "web-dev" --featured
 
-# Browse all featured templates 🆕
+# Browse all featured templates
 dotfiles templates discover --featured
 ```
 
@@ -189,7 +187,7 @@ dotfiles templates discover --featured
 - `devops` - Kubernetes, Terraform, cloud tools
 - `minimal` - Essential tools only
 
-### 📚 Create & Share Templates 🆕
+### Create & Share Templates
 
 Create reusable templates for the community:
 
@@ -207,7 +205,7 @@ dotfiles templates push my-template.json --public
 dotfiles templates validate my-template.json
 ```
 
-**🤔 Templates vs Configurations - What's the Difference?**
+**Templates vs Configurations - What's the Difference?**
 
 | **Configuration** | **Template** |
 |------------------|-------------|
@@ -219,7 +217,7 @@ dotfiles templates validate my-template.json
 
 Templates support inheritance (`--extends`), additive mode (`--add-only`), and community features like search, tags, and featured status.
 
-### 📤 Share Your Configuration
+### Share Your Configuration
 
 Share your current setup with the community:
 
@@ -227,7 +225,7 @@ Share your current setup with the community:
 # Share via GitHub Gist (public)
 dotfiles share gist --name="My Web Dev Setup" --description="Full-stack config" --author="YourName"
 
-# Share + push as template to API 🆕
+# Share + push as template to API
 dotfiles share gist --name="My Config" --api --featured
 
 # Share privately
@@ -237,7 +235,7 @@ dotfiles share gist --name="My Config" --private
 dotfiles share file my-config.json --name="My Setup"
 ```
 
-### 📥 Import Shared Configurations
+### Import Shared Configurations
 
 Import configurations from others:
 
@@ -255,7 +253,7 @@ dotfiles clone https://gist.github.com/user/gist-id --preview
 dotfiles clone https://gist.github.com/user/gist-id --merge
 ```
 
-### 🔍 Discover Community Configs
+### Discover Community Configs
 
 Find configurations shared by other developers:
 
@@ -271,7 +269,7 @@ dotfiles discover search --tags=python,data-science
 dotfiles discover stats
 ```
 
-## 💡 Usage Examples
+## Usage Examples
 
 ### Adding different types of packages
 ```bash
@@ -378,7 +376,7 @@ mv ~/.env-private.sh ~/.dotfiles/private/.env-private.sh
 ./dotfiles restore ~/my-backup.json
 ```
 
-## 📁 Configuration
+## Configuration
 
 Your configuration is stored as simple JSON at `~/.dotfiles/config.json`:
 
@@ -451,25 +449,25 @@ For `.config` files, use the auto-created `config` package:
 - Put files in `~/.dotfiles/stow/config/.config/`
 - Run `dotfiles stow config` to symlink them
 
-## 📚 Command Reference
+## Command Reference
 
 | Command | Description | Key Flags |
 |---------|-------------|-----------|
-| `dotfiles setup <repo-url>` 🆕 | Fork and setup dotfiles repository | `--force` |
-| `dotfiles onboard` ⭐ | Complete developer setup | `--email=<email>`, `--skip-*` |
-| `dotfiles github setup` 🔐 | Set up GitHub SSH keys | `--email=<email>`, `--key-type=<type>` |
-| `dotfiles github test` 🧪 | Test GitHub SSH connection | None |
-| `dotfiles private <package> <file>` 🔒 | Add private file to stow package | `--dry-run`, `--verbose` |
-| `dotfiles templates list` 📚 | Browse configuration templates | None |
+| `dotfiles setup <repo-url>` | Fork and setup dotfiles repository | `--force` |
+| `dotfiles onboard` | Complete developer setup | `--email=<email>`, `--skip-*` |
+| `dotfiles github setup` | Set up GitHub SSH keys | `--email=<email>`, `--key-type=<type>` |
+| `dotfiles github test` | Test GitHub SSH connection | None |
+| `dotfiles private <package> <file>` | Add private file to stow package | `--dry-run`, `--verbose` |
+| `dotfiles templates list` | Browse configuration templates | None |
 | `dotfiles templates show <name>` | Preview template details | None |
-| `dotfiles templates create <name>` 🆕 | Create new template | `--extends=<template>`, `--add-only`, `--push`, `--public`, `--featured` |
-| `dotfiles templates push <file>` 🆕 | Push template to API | `--public`, `--featured` |
-| `dotfiles templates discover` 🆕 | Discover community templates | `--search=<term>`, `--tags=<tags>`, `--featured` |
-| `dotfiles templates validate <file>` 🆕 | Validate template structure | None |
-| `dotfiles share gist` 🤝 | Share config via GitHub Gist | `--name=<name>`, `--description`, `--private`, `--api`, `--featured` |
+| `dotfiles templates create <name>` | Create new template | `--extends=<template>`, `--add-only`, `--push`, `--public`, `--featured` |
+| `dotfiles templates push <file>` | Push template to API | `--public`, `--featured` |
+| `dotfiles templates discover` | Discover community templates | `--search=<term>`, `--tags=<tags>`, `--featured` |
+| `dotfiles templates validate <file>` | Validate template structure | None |
+| `dotfiles share gist` | Share config via GitHub Gist | `--name=<name>`, `--description`, `--private`, `--api`, `--featured` |
 | `dotfiles share file <path>` | Export config to file | `--name=<name>`, `--description` |
-| `dotfiles clone <source>` 📥 | Import shared configuration | `--merge`, `--preview` |
-| `dotfiles discover search` 🔍 | Search community configs | `--tags=<tags>` |
+| `dotfiles clone <source>` | Import shared configuration | `--merge`, `--preview` |
+| `dotfiles discover search` | Search community configs | `--tags=<tags>` |
 | `dotfiles discover featured` | Browse featured configs | None |
 | `dotfiles init` | Initialize new configuration | None |
 | `dotfiles add <packages>` | Add packages to config | `--type=brew/cask/tap/stow`, `--file=<path>` |
@@ -485,7 +483,7 @@ For `.config` files, use the auto-created `config` package:
 | `dotfiles unstow <packages>` | Remove symlinks | `--dir=<path>`, `--target=<path>`, `--all`, `--keep-config` |
 | `dotfiles restow <packages>` | Restow (unstow + stow) | `--dir=<path>`, `--target=<path>`, `--all` |
 
-## 🛠 Development
+## Development
 
 ### Prerequisites
 - Go 1.25.1 or later
@@ -516,7 +514,7 @@ Go_Dotfiles/
 └── main.go             # Entry point
 ```
 
-## 📦 Publishing & Distribution
+## Publishing & Distribution
 
 ### Homebrew Tap
 This package will be available via a custom Homebrew tap:
@@ -535,7 +533,7 @@ Automated releases are created for every tagged version with binaries for:
 ### Installation Script
 The `install.sh` script automatically detects your platform and installs the appropriate binary.
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create your feature branch: `git checkout -b feature/amazing-feature`
@@ -543,6 +541,6 @@ The `install.sh` script automatically detects your platform and installs the app
 4. Push to the branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
 
-## 📄 License
+## License
 
 MIT License

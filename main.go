@@ -461,12 +461,138 @@ func (m *MongoStorage) IncrementTemplateDownloads(id string) error {
 var storage ConfigStorage
 var templateStorage TemplateStorage
 
+func seedTemplates() {
+	// Check if we already have templates
+	templates, err := templateStorage.SearchTemplates("", "", nil)
+	if err == nil && len(templates) > 0 {
+		return // Already have templates
+	}
+
+	seedTemplates := []Template{
+		{
+			Taps:  []string{"homebrew/cask-fonts"},
+			Brews: []string{"git", "curl", "wget", "tree", "jq", "node", "npm", "yarn", "python3", "docker", "postgresql"},
+			Casks: []string{"visual-studio-code", "google-chrome", "firefox", "iterm2", "rectangle", "figma", "slack", "postman"},
+			Stow:  []string{"git", "zsh", "vim", "vscode", "tmux"},
+			Metadata: ShareMetadata{
+				Name:        "Full Stack Web Developer",
+				Description: "Complete setup for modern web development with Node.js, Python, Docker, and essential development tools. Perfect for frontend, backend, and full-stack developers.",
+				Author:      "webdev_pro",
+				Tags:        []string{"web-dev", "javascript", "python", "docker", "frontend", "backend", "full-stack"},
+				CreatedAt:   time.Now().AddDate(0, 0, -14),
+				Version:     "2.1.0",
+			},
+			Public:   true,
+			Featured: true,
+			AddOnly:  false,
+		},
+		{
+			Brews: []string{"git", "python3", "r", "jupyter", "postgresql", "sqlite", "graphviz", "pandoc"},
+			Casks: []string{"visual-studio-code", "rstudio", "tableau-public", "docker", "anaconda"},
+			Stow:  []string{"git", "zsh", "vim", "python", "jupyter", "r"},
+			Metadata: ShareMetadata{
+				Name:        "Data Science Toolkit",
+				Description: "Comprehensive Python, R, and Jupyter environment for data scientists, researchers, and analysts. Includes visualization tools and database connections.",
+				Author:      "data_scientist",
+				Tags:        []string{"data-science", "python", "r", "jupyter", "analytics", "ml", "statistics"},
+				CreatedAt:   time.Now().AddDate(0, 0, -10),
+				Version:     "1.8.0",
+			},
+			Public:   true,
+			Featured: true,
+			AddOnly:  false,
+		},
+		{
+			Taps:  []string{"hashicorp/tap", "kubernetes/tap"},
+			Brews: []string{"git", "curl", "kubectl", "terraform", "ansible", "aws-cli", "docker", "helm", "jq", "yq"},
+			Casks: []string{"visual-studio-code", "iterm2", "lens", "postman", "docker"},
+			Stow:  []string{"git", "zsh", "kubectl", "terraform", "aws"},
+			Metadata: ShareMetadata{
+				Name:        "DevOps Engineer Setup",
+				Description: "Infrastructure, containerization, and cloud tools for DevOps workflows. Includes Kubernetes, Terraform, AWS CLI, and monitoring tools.",
+				Author:      "devops_master",
+				Tags:        []string{"devops", "kubernetes", "terraform", "aws", "docker", "infrastructure", "cloud"},
+				CreatedAt:   time.Now().AddDate(0, 0, -5),
+				Version:     "3.0.0",
+			},
+			Public:   true,
+			Featured: true,
+			AddOnly:  false,
+		},
+		{
+			Brews: []string{"git", "node", "watchman", "cocoapods", "ruby", "android-platform-tools"},
+			Casks: []string{"visual-studio-code", "android-studio", "xcode", "simulator", "flipper"},
+			Stow:  []string{"git", "zsh", "vim", "react-native"},
+			Metadata: ShareMetadata{
+				Name:        "Mobile Developer Setup",
+				Description: "iOS and Android development environment with React Native, Flutter, and native toolchains. Includes simulators and debugging tools.",
+				Author:      "mobile_dev",
+				Tags:        []string{"mobile-dev", "ios", "android", "react-native", "flutter", "xcode"},
+				CreatedAt:   time.Now().AddDate(0, 0, -8),
+				Version:     "1.5.0",
+			},
+			Public:   true,
+			Featured: false,
+			AddOnly:  false,
+		},
+		{
+			Brews: []string{"git", "node", "python3", "go", "rust", "postgresql", "redis", "nginx"},
+			Casks: []string{"visual-studio-code", "iterm2", "postman", "tableplus"},
+			Stow:  []string{"git", "zsh", "vim", "go", "rust"},
+			Metadata: ShareMetadata{
+				Name:        "Backend Developer Kit",
+				Description: "Server-side development with multiple languages: Go, Rust, Python, Node.js. Includes databases and API development tools.",
+				Author:      "backend_guru",
+				Tags:        []string{"backend", "go", "rust", "python", "nodejs", "api", "database"},
+				CreatedAt:   time.Now().AddDate(0, 0, -12),
+				Version:     "1.3.0",
+			},
+			Public:   true,
+			Featured: false,
+			AddOnly:  false,
+		},
+		{
+			Brews: []string{"git", "curl", "tree", "vim", "tmux"},
+			Casks: []string{"iterm2", "visual-studio-code"},
+			Stow:  []string{"git", "vim", "tmux"},
+			Metadata: ShareMetadata{
+				Name:        "Minimal Developer Setup",
+				Description: "Essential tools for any developer. Lightweight setup with just the basics you need to get started with development.",
+				Author:      "minimalist",
+				Tags:        []string{"minimal", "essential", "basic", "lightweight"},
+				CreatedAt:   time.Now().AddDate(0, 0, -20),
+				Version:     "1.0.0",
+			},
+			Public:   true,
+			Featured: false,
+			AddOnly:  false,
+		},
+	}
+
+	for i, template := range seedTemplates {
+		id := uuid.New().String()
+		stored := &StoredTemplate{
+			ID:        id,
+			Template:  template,
+			CreatedAt: template.Metadata.CreatedAt,
+			UpdatedAt: template.Metadata.CreatedAt,
+			Downloads: int(time.Since(template.Metadata.CreatedAt).Hours()/24) * (i + 1), // Simulate downloads
+		}
+		templateStorage.StoreTemplate(stored)
+	}
+}
+
 func seedData() {
 	// Check if we already have data
 	total, _, _, err := storage.GetStats()
 	if err == nil && total > 0 {
 		return // Already have data
 	}
+
+	// Seed templates first
+	seedTemplates()
+
+	// Then seed configs
 
 	// Add some seed data
 	seedConfigs := []struct {
@@ -641,6 +767,16 @@ func main() {
 	// Template detail page route
 	r.GET("/template/:id", func(c *gin.Context) {
 		c.File("./static/template.html")
+	})
+
+	// Templates page route
+	r.GET("/templates", func(c *gin.Context) {
+		c.File("./static/templates.html")
+	})
+
+	// Documentation page route
+	r.GET("/docs", func(c *gin.Context) {
+		c.File("./static/docs.html")
 	})
 
 	log.Printf("Server starting on port %s", port)

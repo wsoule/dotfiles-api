@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - Dotfiles Manager</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/universal-header.css">
+</head>
+<body>
+    <!-- Universal Header -->
+    <header class="universal-header">
+        <div class="header-container">
+            <a href="/" class="header-brand">
+                Dotfiles Manager
+            </a>
+            <nav class="header-nav">
+                <a href="/">Home</a>
+                <a href="/templates">Templates</a>
+                <a href="/docs" class="active">Documentation</a>
+            </nav>
+            <div class="header-attribution">
+                <span>Created by Wyat Soule</span>
+                <a href="https://github.com/wsoule" target="_blank">GitHub</a>
+                <a href="https://github.com/wsoule/go-dotfiles" target="_blank">Repository</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="docs-container">
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-content">
+                <h3>Getting Started</h3>
+                <ul>
+                    <li><a href="#introduction" onclick="navigateToSection('introduction')">Introduction</a></li>
+                    <li><a href="#installation" onclick="navigateToSection('installation')">Installation</a></li>
+                    <li><a href="#quick-start" onclick="navigateToSection('quick-start')">Quick Start</a></li>
+                </ul>
+
+                <h3>Core Features</h3>
+                <ul>
+                    <li><a href="#onboarding" onclick="navigateToSection('onboarding')">Developer Onboarding</a></li>
+                    <li><a href="#package-management" onclick="navigateToSection('package-management')">Package Management</a></li>
+                    <li><a href="#github-integration" onclick="navigateToSection('github-integration')">GitHub Integration</a></li>
+                    <li><a href="#configuration-sharing" onclick="navigateToSection('configuration-sharing')">Configuration Sharing</a></li>
+                </ul>
+
+                <h3>Commands</h3>
+                <ul>
+                    <li><a href="#basic-commands" onclick="navigateToSection('basic-commands')">Basic Commands</a></li>
+                    <li><a href="#advanced-commands" onclick="navigateToSection('advanced-commands')">Advanced Commands</a></li>
+                    <li><a href="#template-commands" onclick="navigateToSection('template-commands')">Template Commands</a></li>
+                </ul>
+
+                <h3>Advanced Usage</h3>
+                <ul>
+                    <li><a href="#templates" onclick="navigateToSection('templates')">Working with Templates</a></li>
+                    <li><a href="#customization" onclick="navigateToSection('customization')">Customization</a></li>
+                    <li><a href="#troubleshooting" onclick="navigateToSection('troubleshooting')">Troubleshooting</a></li>
+                </ul>
+
+                <h3>Reference</h3>
+                <ul>
+                    <li><a href="#api-reference" onclick="navigateToSection('api-reference')">API Reference</a></li>
+                    <li><a href="#configuration-format" onclick="navigateToSection('configuration-format')">Configuration Format</a></li>
+                    <li><a href="#examples" onclick="navigateToSection('examples')">Examples</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <section id="introduction" class="section">
+                    <h1>Dotfiles Manager Documentation</h1>
+                    <p>Welcome to the comprehensive documentation for Dotfiles Manager - the complete solution for developer environment setup and management.</p>
+
+                    <h2>What is Dotfiles Manager?</h2>
+                    <p>Dotfiles Manager is a powerful command-line tool designed to streamline the process of setting up and managing development environments. It provides automation for:</p>
+                    <ul>
+                        <li>Package installation via Homebrew</li>
+                        <li>Dotfile management with GNU Stow</li>
+                        <li>GitHub SSH key generation and setup</li>
+                        <li>Developer onboarding workflows</li>
+                        <li>Configuration sharing and discovery</li>
+                    </ul>
+
+                    <div class="highlight">
+                        <strong>Perfect for:</strong> New team members, bootcamp students, DevOps teams, data scientists, mobile developers, and anyone who wants to maintain consistent development environments across multiple machines.
+                    </div>
+                </section>
+
+                <section id="installation" class="section">
+                    <h2>Installation</h2>
+
+                    <h3>Quick Install (Recommended)</h3>
+                    <div class="code-block-container">
+                        <pre><code>brew tap wsoule/tap && brew install dotfiles</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Alternative Installation</h3>
+                    <div class="code-block-container">
+                        <pre><code>curl -fsSL https://raw.githubusercontent.com/wsoule/new-dotfiles/main/install.sh | bash</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Manual Installation</h3>
+                    <p>You can also download the binary directly from the GitHub releases page:</p>
+                    <div class="code-block-container">
+                        <pre><code># Download and install manually
+wget https://github.com/wsoule/go-dotfiles/releases/latest/download/dotfiles-darwin-amd64
+chmod +x dotfiles-darwin-amd64
+sudo mv dotfiles-darwin-amd64 /usr/local/bin/dotfiles</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                </section>
+
+                <section id="quick-start" class="section">
+                    <h2>Quick Start</h2>
+
+                    <h3>New Developer Onboarding</h3>
+                    <p>The fastest way to get started is with the onboarding command:</p>
+                    <div class="code-block-container">
+                        <pre><code>dotfiles onboard --email your@email.com</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <p>This single command will:</p>
+                    <ul>
+                        <li>Install essential development packages</li>
+                        <li>Generate and configure SSH keys for GitHub</li>
+                        <li>Set up basic development tools</li>
+                        <li>Configure Git with your email</li>
+                    </ul>
+
+                    <h3>Using Templates</h3>
+                    <p>Start with a pre-built template for your development stack:</p>
+                    <div class="code-block-container">
+                        <pre><code># Web development setup
+dotfiles clone template:web-dev
+
+# Data science environment
+dotfiles clone template:data-science
+
+# DevOps toolchain
+dotfiles clone template:devops</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Manual Setup</h3>
+                    <p>For custom configurations, start from scratch:</p>
+                    <div class="code-block-container">
+                        <pre><code># Initialize new configuration
+dotfiles init
+
+# Add packages manually
+dotfiles add git curl node python3
+
+# Add applications
+dotfiles add --cask visual-studio-code google-chrome</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                </section>
+
+                <section id="onboarding" class="section">
+                    <h2>Developer Onboarding</h2>
+
+                    <p>The onboarding feature is designed to get new developers productive in minutes, not hours or days.</p>
+
+                    <h3>Basic Onboarding</h3>
+                    <div class="code-block-container">
+                        <pre><code>dotfiles onboard --email developer@company.com</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Onboarding with Custom Template</h3>
+                    <div class="code-block-container">
+                        <pre><code>dotfiles onboard --email developer@company.com --template team-setup</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>What Happens During Onboarding</h3>
+                    <ol>
+                        <li><strong>Package Installation:</strong> Essential development tools are installed</li>
+                        <li><strong>SSH Key Generation:</strong> New SSH key pair is created</li>
+                        <li><strong>GitHub Integration:</strong> SSH key is added to GitHub account</li>
+                        <li><strong>Git Configuration:</strong> User name and email are configured</li>
+                        <li><strong>Dotfile Setup:</strong> Basic configuration files are installed</li>
+                    </ol>
+
+                    <div class="highlight">
+                        <strong>Team Setup:</strong> Organizations can create custom onboarding templates with company-specific tools and configurations to ensure consistency across the team.
+                    </div>
+                </section>
+
+                <section id="package-management" class="section">
+                    <h2>Package Management</h2>
+
+                    <p>Dotfiles Manager provides comprehensive package management through Homebrew integration.</p>
+
+                    <h3>Adding Packages</h3>
+                    <div class="code-block-container">
+                        <pre><code># Add command-line tools
+dotfiles add git curl wget tree jq
+
+# Add GUI applications
+dotfiles add --cask visual-studio-code google-chrome slack
+
+# Add specific taps
+dotfiles add --tap homebrew/cask-fonts</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Removing Packages</h3>
+                    <div class="code-block-container">
+                        <pre><code># Remove packages
+dotfiles remove wget tree
+
+# Remove applications
+dotfiles remove --cask slack</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Listing Packages</h3>
+                    <div class="code-block-container">
+                        <pre><code># List all packages
+dotfiles list
+
+# List in JSON format
+dotfiles list --json
+
+# List specific type
+dotfiles list --brews-only
+dotfiles list --casks-only</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Package Categories</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>brews</code></td>
+                                <td>Command-line tools and libraries</td>
+                                <td>git, curl, python3, node</td>
+                            </tr>
+                            <tr>
+                                <td><code>casks</code></td>
+                                <td>GUI applications</td>
+                                <td>visual-studio-code, chrome, slack</td>
+                            </tr>
+                            <tr>
+                                <td><code>taps</code></td>
+                                <td>Third-party repositories</td>
+                                <td>homebrew/cask-fonts</td>
+                            </tr>
+                            <tr>
+                                <td><code>stow</code></td>
+                                <td>Dotfile configurations</td>
+                                <td>vim, zsh, tmux</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section id="github-integration" class="section">
+                    <h2>GitHub Integration</h2>
+
+                    <p>Seamless GitHub integration for SSH key management and repository access.</p>
+
+                    <h3>SSH Key Setup</h3>
+                    <div class="code-block-container">
+                        <pre><code># Generate and add SSH key to GitHub
+dotfiles ssh --setup --email your@email.com
+
+# Generate key only (manual GitHub setup)
+dotfiles ssh --generate</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Repository Cloning</h3>
+                    <div class="code-block-container">
+                        <pre><code># Clone configuration from GitHub user
+dotfiles clone username
+
+# Clone specific repository
+dotfiles clone username/repo-name
+
+# Clone from URL
+dotfiles clone https://github.com/username/dotfiles</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Configuration Sharing</h3>
+                    <div class="code-block-container">
+                        <pre><code># Share current configuration as GitHub Gist
+dotfiles share gist --name "My Dev Setup" --description "Full-stack web development environment"
+
+# Share with specific visibility
+dotfiles share gist --private</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                </section>
+
+                <section id="configuration-sharing" class="section">
+                    <h2>Configuration Sharing</h2>
+
+                    <p>Share and discover development configurations with the community.</p>
+
+                    <h3>Sharing Your Configuration</h3>
+                    <div class="code-block-container">
+                        <pre><code># Share via CLI
+dotfiles share gist --name="My Setup" --description="My awesome dev config" --author="yourname"
+
+# Export to file first
+dotfiles list --json > my-config.json</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Finding Configurations</h3>
+                    <p>Browse community configurations on the main website or search by tags:</p>
+                    <ul>
+                        <li>web-dev: Frontend and backend web development</li>
+                        <li>data-science: Python, R, Jupyter environments</li>
+                        <li>devops: Infrastructure and deployment tools</li>
+                        <li>mobile-dev: iOS and Android development</li>
+                    </ul>
+
+                    <h3>Using Shared Configurations</h3>
+                    <div class="code-block-container">
+                        <pre><code># Clone from community
+dotfiles clone https://dotfiles-web.com/api/configs/123
+
+# Use as base for your setup
+dotfiles clone config-url --merge</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                </section>
+
+                <section id="basic-commands" class="section">
+                    <h2>Basic Commands</h2>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Command</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>dotfiles init</code></td>
+                                <td>Initialize new configuration</td>
+                                <td><code>dotfiles init</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>dotfiles add</code></td>
+                                <td>Add packages to configuration</td>
+                                <td><code>dotfiles add git curl</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>dotfiles remove</code></td>
+                                <td>Remove packages</td>
+                                <td><code>dotfiles remove wget</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>dotfiles list</code></td>
+                                <td>List current packages</td>
+                                <td><code>dotfiles list --json</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>dotfiles install</code></td>
+                                <td>Install all packages</td>
+                                <td><code>dotfiles install</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>dotfiles backup</code></td>
+                                <td>Backup configuration</td>
+                                <td><code>dotfiles backup ~/backup.json</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>dotfiles restore</code></td>
+                                <td>Restore from backup</td>
+                                <td><code>dotfiles restore ~/backup.json</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section id="advanced-commands" class="section">
+                    <h2>Advanced Commands</h2>
+
+                    <h3>Onboarding</h3>
+                    <div class="code-block-container">
+                        <pre><code># Full onboarding with email
+dotfiles onboard --email dev@company.com
+
+# Onboarding with custom template
+dotfiles onboard --email dev@company.com --template team-setup
+
+# Onboarding with specific packages
+dotfiles onboard --email dev@company.com --packages "git,curl,node"</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>SSH Management</h3>
+                    <div class="code-block-container">
+                        <pre><code># Generate SSH key
+dotfiles ssh --generate
+
+# Setup SSH with GitHub integration
+dotfiles ssh --setup --email your@email.com
+
+# List SSH keys
+dotfiles ssh --list</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Configuration Management</h3>
+                    <div class="code-block-container">
+                        <pre><code># Clone configuration
+dotfiles clone username/repo
+
+# Clone and merge with existing
+dotfiles clone username/repo --merge
+
+# Sync with remote
+dotfiles sync</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                </section>
+
+                <section id="template-commands" class="section">
+                    <h2>Template Commands</h2>
+
+                    <h3>Using Templates</h3>
+                    <div class="code-block-container">
+                        <pre><code># List available templates
+dotfiles template list
+
+# Use a template
+dotfiles clone template:web-dev
+
+# Use template with customization
+dotfiles clone template:web-dev --add "docker,kubernetes"</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Creating Templates</h3>
+                    <div class="code-block-container">
+                        <pre><code># Create template from current config
+dotfiles template create --name "my-template" --description "My custom setup"
+
+# Create template with inheritance
+dotfiles template create --name "extended-web" --extends "web-dev" --add "docker"</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Available Templates</h3>
+                    <ul>
+                        <li><strong>web-dev:</strong> Full-stack web development (Node.js, Python, Git, VS Code)</li>
+                        <li><strong>data-science:</strong> Python, R, Jupyter, data analysis tools</li>
+                        <li><strong>devops:</strong> Docker, Kubernetes, Terraform, cloud tools</li>
+                        <li><strong>mobile-dev:</strong> iOS/Android development tools</li>
+                        <li><strong>minimal:</strong> Basic development essentials</li>
+                    </ul>
+                </section>
+
+                <section id="templates" class="section">
+                    <h2>Working with Templates</h2>
+
+                    <p>Templates provide pre-configured development environments for different use cases.</p>
+
+                    <h3>Template Structure</h3>
+                    <p>Templates are JSON files that define packages and configurations:</p>
+                    <div class="code-block-container">
+                        <pre><code>{
+  "metadata": {
+    "name": "Web Development Template",
+    "description": "Full-stack web development environment",
+    "author": "Your Name",
+    "version": "1.0.0",
+    "tags": ["web-dev", "frontend", "backend"]
+  },
+  "brews": ["git", "curl", "node", "python3", "yarn"],
+  "casks": ["visual-studio-code", "google-chrome", "iterm2"],
+  "taps": ["homebrew/cask-fonts"],
+  "stow": ["vim", "zsh", "git"]
+}</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Template Inheritance</h3>
+                    <p>Templates can extend other templates:</p>
+                    <div class="code-block-container">
+                        <pre><code>{
+  "extends": "web-dev",
+  "addOnly": true,
+  "brews": ["docker", "kubernetes-cli"],
+  "casks": ["docker"]
+}</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Publishing Templates</h3>
+                    <p>Share your templates with the community through the web interface or API.</p>
+                </section>
+
+                <section id="customization" class="section">
+                    <h2>Customization</h2>
+
+                    <h3>Configuration File</h3>
+                    <p>Dotfiles Manager uses a JSON configuration file located at <code>~/.dotfiles/config.json</code>:</p>
+                    <div class="code-block-container">
+                        <pre><code>{
+  "brews": ["git", "curl", "tree"],
+  "casks": ["visual-studio-code"],
+  "taps": [],
+  "stow": ["vim", "zsh"],
+  "metadata": {
+    "name": "My Development Setup",
+    "author": "Your Name",
+    "description": "Personal development environment",
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  }
+}</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Environment Variables</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Variable</th>
+                                <th>Description</th>
+                                <th>Default</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>DOTFILES_DIR</code></td>
+                                <td>Configuration directory</td>
+                                <td><code>~/.dotfiles</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>DOTFILES_REMOTE</code></td>
+                                <td>Default remote repository</td>
+                                <td>None</td>
+                            </tr>
+                            <tr>
+                                <td><code>GITHUB_TOKEN</code></td>
+                                <td>GitHub API token</td>
+                                <td>None</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Hooks and Scripts</h3>
+                    <p>Add custom scripts that run during installation:</p>
+                    <div class="code-block-container">
+                        <pre><code># ~/.dotfiles/hooks/post-install.sh
+#!/bin/bash
+
+# Configure Git
+git config --global user.name "Your Name"
+git config --global user.email "your@email.com"
+
+# Install additional tools
+npm install -g typescript eslint
+
+echo "Custom setup complete!"</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                </section>
+
+                <section id="troubleshooting" class="section">
+                    <h2>Troubleshooting</h2>
+
+                    <h3>Common Issues</h3>
+
+                    <h4>Installation Fails</h4>
+                    <div class="code-block-container">
+                        <pre><code># Check Homebrew installation
+brew --version
+
+# Update Homebrew
+brew update
+
+# Fix permissions
+sudo chown -R $(whoami) /usr/local/share/zsh</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h4>SSH Key Issues</h4>
+                    <div class="code-block-container">
+                        <pre><code># Check SSH key
+ls -la ~/.ssh/
+
+# Test GitHub connection
+ssh -T git@github.com
+
+# Regenerate SSH key
+dotfiles ssh --generate --force</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h4>Configuration Not Found</h4>
+                    <div class="code-block-container">
+                        <pre><code># Check configuration location
+ls -la ~/.dotfiles/
+
+# Initialize new configuration
+dotfiles init
+
+# Restore from backup
+dotfiles restore ~/backup.json</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Debug Mode</h3>
+                    <div class="code-block-container">
+                        <pre><code># Run with debug output
+dotfiles --debug install
+
+# Verbose logging
+dotfiles --verbose onboard --email test@example.com</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Getting Help</h3>
+                    <ul>
+                        <li>Use <code>dotfiles --help</code> for command-line help</li>
+                        <li>Check the GitHub repository for issues and discussions</li>
+                        <li>Join the community Discord for real-time support</li>
+                    </ul>
+                </section>
+
+                <section id="api-reference" class="section">
+                    <h2>API Reference</h2>
+
+                    <p>Dotfiles Manager provides a RESTful API for integration with other tools.</p>
+
+                    <h3>Base URL</h3>
+                    <p><code>https://dotfiles-web.com/api</code></p>
+
+                    <h3>Endpoints</h3>
+
+                    <h4>Templates</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Endpoint</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>GET</td>
+                                <td><code>/templates</code></td>
+                                <td>List all templates</td>
+                            </tr>
+                            <tr>
+                                <td>GET</td>
+                                <td><code>/templates/{id}</code></td>
+                                <td>Get specific template</td>
+                            </tr>
+                            <tr>
+                                <td>POST</td>
+                                <td><code>/templates</code></td>
+                                <td>Create new template</td>
+                            </tr>
+                            <tr>
+                                <td>GET</td>
+                                <td><code>/templates/{id}/download</code></td>
+                                <td>Download template JSON</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>Configurations</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Endpoint</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>GET</td>
+                                <td><code>/configs/search</code></td>
+                                <td>Search configurations</td>
+                            </tr>
+                            <tr>
+                                <td>POST</td>
+                                <td><code>/configs/upload</code></td>
+                                <td>Upload configuration</td>
+                            </tr>
+                            <tr>
+                                <td>GET</td>
+                                <td><code>/configs/stats</code></td>
+                                <td>Get usage statistics</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section id="configuration-format" class="section">
+                    <h2>Configuration Format</h2>
+
+                    <h3>Schema</h3>
+                    <div class="code-block-container">
+                        <pre><code>{
+  "brews": ["string", "..."],
+  "casks": ["string", "..."],
+  "taps": ["string", "..."],
+  "stow": ["string", "..."],
+  "metadata": {
+    "name": "string",
+    "description": "string",
+    "author": "string",
+    "version": "string",
+    "tags": ["string", "..."],
+    "created_at": "ISO 8601 timestamp",
+    "updated_at": "ISO 8601 timestamp"
+  },
+  "extends": "string (optional)",
+  "overrides": ["string", "..."],
+  "addOnly": "boolean",
+  "public": "boolean",
+  "featured": "boolean"
+}</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Field Descriptions</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Field</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>brews</code></td>
+                                <td>Array</td>
+                                <td>Command-line packages from Homebrew</td>
+                            </tr>
+                            <tr>
+                                <td><code>casks</code></td>
+                                <td>Array</td>
+                                <td>GUI applications from Homebrew Cask</td>
+                            </tr>
+                            <tr>
+                                <td><code>taps</code></td>
+                                <td>Array</td>
+                                <td>Additional Homebrew repositories</td>
+                            </tr>
+                            <tr>
+                                <td><code>stow</code></td>
+                                <td>Array</td>
+                                <td>Dotfile packages managed by GNU Stow</td>
+                            </tr>
+                            <tr>
+                                <td><code>metadata</code></td>
+                                <td>Object</td>
+                                <td>Configuration metadata and information</td>
+                            </tr>
+                            <tr>
+                                <td><code>extends</code></td>
+                                <td>String</td>
+                                <td>Parent template to inherit from</td>
+                            </tr>
+                            <tr>
+                                <td><code>addOnly</code></td>
+                                <td>Boolean</td>
+                                <td>Only add packages, don't remove existing</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section id="examples" class="section">
+                    <h2>Examples</h2>
+
+                    <h3>Web Development Setup</h3>
+                    <div class="code-block-container">
+                        <pre><code>{
+  "metadata": {
+    "name": "Full-Stack Web Development",
+    "description": "Complete setup for modern web development",
+    "author": "developer",
+    "version": "2.0.0",
+    "tags": ["web-dev", "frontend", "backend", "javascript"]
+  },
+  "brews": [
+    "git", "curl", "wget", "tree", "jq",
+    "node", "yarn", "python3", "pipenv",
+    "postgresql", "redis", "nginx"
+  ],
+  "casks": [
+    "visual-studio-code", "google-chrome", "firefox",
+    "iterm2", "postman", "figma", "slack", "docker"
+  ],
+  "taps": [
+    "homebrew/cask-fonts"
+  ],
+  "stow": [
+    "git", "zsh", "vim", "tmux", "vscode"
+  ]
+}</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Data Science Environment</h3>
+                    <div class="code-block-container">
+                        <pre><code>{
+  "metadata": {
+    "name": "Data Science Toolkit",
+    "description": "Python and R environment for data analysis",
+    "author": "data-scientist",
+    "version": "1.5.0",
+    "tags": ["data-science", "python", "r", "jupyter"]
+  },
+  "brews": [
+    "python3", "pipenv", "jupyter", "r", "git",
+    "postgresql", "sqlite", "graphviz"
+  ],
+  "casks": [
+    "rstudio", "jupyter-notebook-viewer",
+    "visual-studio-code", "tableau-public"
+  ],
+  "stow": [
+    "jupyter", "r", "python", "git"
+  ]
+}</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+
+                    <h3>Minimal Development Setup</h3>
+                    <div class="code-block-container">
+                        <pre><code>{
+  "metadata": {
+    "name": "Minimal Development Environment",
+    "description": "Essential tools for any developer",
+    "author": "minimalist",
+    "version": "1.0.0",
+    "tags": ["minimal", "essential"]
+  },
+  "brews": [
+    "git", "curl", "tree", "vim"
+  ],
+  "casks": [
+    "iterm2", "visual-studio-code"
+  ],
+  "stow": [
+    "git", "vim"
+  ]
+}</code></pre>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        function navigateToSection(sectionId) {
+            // Remove active class from all sidebar links
+            document.querySelectorAll('.sidebar a').forEach(link => {
+                link.classList.remove('active');
+            });
+
+            // Add active class to clicked link
+            event.target.classList.add('active');
+
+            // Scroll to section
+            document.getElementById(sectionId).scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+
+            // Close mobile sidebar
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+        }
+
+        function copyCode(button) {
+            const codeBlock = button.previousElementSibling;
+            const code = codeBlock.textContent;
+
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = button.textContent;
+                button.textContent = '✓ Copied!';
+                button.classList.add('copied');
+
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy code:', err);
+                // Fallback for browsers that don't support clipboard API
+                const textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                const originalText = button.textContent;
+                button.textContent = '✓ Copied!';
+                button.classList.add('copied');
+
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Update active sidebar link based on scroll position
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('section[id]');
+            const sidebar = document.querySelector('.sidebar');
+            const scrollPos = window.scrollY + 100;
+
+            sections.forEach(section => {
+                const top = section.offsetTop;
+                const bottom = top + section.offsetHeight;
+                const id = section.getAttribute('id');
+
+                if (scrollPos >= top && scrollPos <= bottom) {
+                    // Remove active class from all links
+                    sidebar.querySelectorAll('a').forEach(link => {
+                        link.classList.remove('active');
+                    });
+
+                    // Add active class to current section link
+                    const activeLink = sidebar.querySelector(`a[href="#${id}"]`);
+                    if (activeLink) {
+                        activeLink.classList.add('active');
+                    }
+                }
+            });
+        });
+
+        // Set initial active link
+        document.addEventListener('DOMContentLoaded', () => {
+            const firstLink = document.querySelector('.sidebar a');
+            if (firstLink) {
+                firstLink.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>
