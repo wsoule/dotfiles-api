@@ -697,6 +697,7 @@ async function submitTemplateEnhanced(event) {
         brews: packageData.brews,
         casks: packageData.casks,
         stow: packageData.stow,
+        organization_id: document.getElementById('template-organization').value || '',
         metadata: {
             name: document.getElementById('template-name').value,
             description: document.getElementById('template-description').value,
@@ -841,5 +842,47 @@ document.addEventListener('DOMContentLoaded', function() {
         setupCharCounters();
         setupPackageInputs();
         updateWizardStep();
+        loadUserOrganizations(); // Load organizations for form
     }
 });
+
+// Load user organizations for template form
+async function loadUserOrganizations() {
+    try {
+        // Check if user is authenticated
+        const authResponse = await fetch('/auth/user');
+        if (!authResponse.ok) {
+            return; // User not authenticated
+        }
+
+        const user = await authResponse.json();
+
+        // Load user's organization memberships
+        const orgsResponse = await fetch('/api/organizations');
+        if (!orgsResponse.ok) {
+            return;
+        }
+
+        const orgData = await orgsResponse.json();
+        const organizations = orgData.organizations || [];
+
+        // Filter to only show organizations where the user is a member
+        // For now, show all public organizations (we'll enhance this later)
+        const orgSelect = document.getElementById('template-organization');
+        if (orgSelect && organizations.length > 0) {
+            // Clear existing options except the first
+            orgSelect.innerHTML = '<option value="">Personal Template</option>';
+
+            organizations.forEach(org => {
+                if (org.public) {
+                    const option = document.createElement('option');
+                    option.value = org.id;
+                    option.textContent = org.name;
+                    orgSelect.appendChild(option);
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Failed to load user organizations:', error);
+    }
+}

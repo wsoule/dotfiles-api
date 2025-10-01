@@ -17,6 +17,7 @@
             <nav class="header-nav">
                 <a href="/">Home</a>
                 <a href="/templates" class="active">Templates</a>
+                <a href="/organizations">Organizations</a>
                 <a href="/docs">Documentation</a>
             </nav>
             <div class="header-attribution">
@@ -106,6 +107,13 @@
                         <option value="">All Templates</option>
                         <option value="true">Featured Only</option>
                         <option value="false">Community Templates</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="template-organization">Organization</label>
+                    <select id="template-organization">
+                        <option value="">All Organizations</option>
+                        <!-- Organizations will be loaded here -->
                     </select>
                 </div>
                 <div class="form-group">
@@ -225,8 +233,10 @@
 
     <script>
         let allTemplates = [];
+        let allOrganizations = [];
         let currentView = 'grid';
         let currentTemplate = null;
+        let currentTemplateId = null;
         let currentUser = null;
         let templateRatings = new Map();
 
@@ -235,6 +245,7 @@
             checkAuthStatus();
             loadTemplates();
             loadTemplateStats();
+            loadOrganizations();
             setupEventListeners();
         });
 
@@ -289,6 +300,7 @@
             document.getElementById('template-search').addEventListener('input', filterTemplates);
             document.getElementById('template-tags').addEventListener('input', filterTemplates);
             document.getElementById('template-featured').addEventListener('change', filterTemplates);
+            document.getElementById('template-organization').addEventListener('change', filterTemplates);
             document.getElementById('template-sort').addEventListener('change', sortAndDisplayTemplates);
         }
 
@@ -338,10 +350,35 @@
             }
         }
 
+        async function loadOrganizations() {
+            try {
+                const response = await fetch('/api/organizations');
+                const data = await response.json();
+                allOrganizations = data.organizations || [];
+
+                const orgSelect = document.getElementById('template-organization');
+                // Clear existing options except the first one
+                orgSelect.innerHTML = '<option value="">All Organizations</option>';
+
+                // Add organization options
+                allOrganizations.forEach(org => {
+                    if (org.public) {
+                        const option = document.createElement('option');
+                        option.value = org.id;
+                        option.textContent = org.name;
+                        orgSelect.appendChild(option);
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to load organizations:', error);
+            }
+        }
+
         function filterTemplates() {
             const search = document.getElementById('template-search').value.toLowerCase();
             const tags = document.getElementById('template-tags').value.toLowerCase();
             const featured = document.getElementById('template-featured').value;
+            const organizationId = document.getElementById('template-organization').value;
 
             let filtered = allTemplates.filter(template => {
                 // Search filter
@@ -363,6 +400,11 @@
                 // Featured filter
                 if (featured === 'true' && !template.featured) return false;
                 if (featured === 'false' && template.featured) return false;
+
+                // Organization filter
+                if (organizationId) {
+                    if (template.organization_id !== organizationId) return false;
+                }
 
                 return true;
             });
@@ -416,6 +458,7 @@
             const cardClass = isListView ? 'template-card list-view' : 'template-card';
             const rating = templateRatings.get(template.id);
             const isFavorited = currentUser && currentUser.favorites && currentUser.favorites.includes(template.id);
+            const organization = template.organization_id ? allOrganizations.find(org => org.id === template.organization_id) : null;
 
             return `
                 <div class="${cardClass}" onclick="showTemplateDetail('${template.id}')">
@@ -428,7 +471,7 @@
                                 <span class="rating-text">(${rating.total_ratings})</span>
                             </div>` : ''}
                         </div>
-                        <div class="author">by ${template.author}</div>
+                        <div class="author">by ${template.author}${organization ? ` • <a href="/organizations/${organization.slug}" onclick="event.stopPropagation()" class="org-link">${organization.name}</a>` : ''}</div>
                         <div class="description">${template.description || 'No description provided'}</div>
                     </div>
                     ${template.tags && template.tags.length ? `
@@ -560,6 +603,7 @@
             document.getElementById('template-search').value = '';
             document.getElementById('template-tags').value = '';
             document.getElementById('template-featured').value = '';
+            document.getElementById('template-organization').value = '';
             document.getElementById('templates-section-title').textContent = 'All Templates';
             filterTemplates();
         }
@@ -574,6 +618,7 @@
                 const template = await templateResponse.json();
                 const reviewsData = await reviewsResponse.json();
                 currentTemplate = { ...template, reviews: reviewsData.reviews || [] };
+                currentTemplateId = templateId; // Store the ID separately
 
                 document.getElementById('modal-title').textContent = template.metadata.name;
                 document.getElementById('modal-body').innerHTML = generateTemplateDetailHTML(currentTemplate);
@@ -721,6 +766,7 @@
             document.getElementById('template-modal').style.display = 'none';
             document.getElementById('modal-overlay').style.display = 'none';
             currentTemplate = null;
+            currentTemplateId = null;
         }
 
         async function downloadTemplate(templateId) {
@@ -745,8 +791,8 @@
         }
 
         function downloadCurrentTemplate() {
-            if (currentTemplate) {
-                downloadTemplate(currentTemplate.id || Object.keys(currentTemplate)[0]);
+            if (currentTemplateId) {
+                downloadTemplate(currentTemplateId);
             }
         }
 
@@ -791,6 +837,7 @@
             document.getElementById('template-search').value = '';
             document.getElementById('template-tags').value = '';
             document.getElementById('template-featured').value = '';
+            document.getElementById('template-organization').value = '';
 
             const favoriteTemplates = allTemplates.filter(template =>
                 currentUser.favorites && currentUser.favorites.includes(template.id)
@@ -841,7 +888,7 @@
             const comment = document.getElementById('review-comment').value.trim();
 
             try {
-                const response = await fetch(`/api/templates/${currentTemplate.id}/reviews`, {
+                const response = await fetch(`/api/templates/${currentTemplateId}/reviews`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -855,12 +902,12 @@
                 if (response.ok) {
                     hideReviewForm();
                     // Refresh the modal content
-                    showTemplateDetail(currentTemplate.id);
+                    showTemplateDetail(currentTemplateId);
                     // Refresh the template rating in the main list
-                    const ratingResponse = await fetch(`/api/templates/${currentTemplate.id}/rating`);
+                    const ratingResponse = await fetch(`/api/templates/${currentTemplateId}/rating`);
                     if (ratingResponse.ok) {
                         const rating = await ratingResponse.json();
-                        templateRatings.set(currentTemplate.id, rating);
+                        templateRatings.set(currentTemplateId, rating);
                     }
                     filterTemplates(); // Re-render to show updated rating
                 } else {
@@ -881,7 +928,7 @@
 
                 if (response.ok) {
                     // Refresh the modal content to show updated helpful count
-                    showTemplateDetail(currentTemplate.id);
+                    showTemplateDetail(currentTemplateId);
                 } else {
                     console.error('Failed to mark review as helpful');
                 }

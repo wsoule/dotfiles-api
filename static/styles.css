@@ -2817,3 +2817,372 @@ body {
         width: 100%;
     }
 }
+
+/* Organization Styles */
+.organizations-header {
+    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+    color: white;
+    padding: 60px 0;
+    border-radius: 12px;
+    margin-bottom: 40px;
+}
+
+.organizations-controls {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.organizations-controls .search-box {
+    flex: 1;
+    min-width: 300px;
+}
+
+.control-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.organizations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.organization-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.organization-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent-primary);
+}
+
+.org-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.org-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--accent-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.org-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.org-avatar-placeholder {
+    color: white;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.org-info h3 {
+    margin: 0;
+    font-size: 1.2em;
+    color: var(--text-primary);
+}
+
+.org-slug {
+    color: var(--text-secondary);
+    font-size: 0.9em;
+    margin: 2px 0 0 0;
+}
+
+.private-badge {
+    background: var(--accent-warning);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 500;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+}
+
+.org-description {
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.org-stats {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.org-stats .stat {
+    color: var(--text-primary);
+    font-size: 0.9em;
+}
+
+.org-website {
+    color: var(--accent-primary);
+    text-decoration: none;
+    font-size: 0.9em;
+}
+
+.org-website:hover {
+    text-decoration: underline;
+}
+
+.org-footer {
+    border-top: 1px solid var(--border-color);
+    padding-top: 15px;
+    color: var(--text-secondary);
+    font-size: 0.85em;
+}
+
+/* Organization Detail Modal */
+.org-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.org-meta {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.org-meta .meta-item {
+    color: var(--text-secondary);
+    font-size: 0.9em;
+}
+
+.org-description-full {
+    color: var(--text-primary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.org-members h3 {
+    color: var(--text-primary);
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.member-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.member-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.member-role {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.member-role.role-owner {
+    background: var(--accent-primary);
+    color: white;
+}
+
+.member-role.role-admin {
+    background: var(--accent-secondary);
+    color: white;
+}
+
+.member-role.role-member {
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.member-date {
+    color: var(--text-secondary);
+    font-size: 0.85em;
+}
+
+/* Profile page styles */
+.profile-header {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid var(--accent-primary);
+}
+
+.profile-details h1 {
+    margin: 0 0 5px 0;
+    color: var(--text-primary);
+}
+
+.username {
+    color: var(--text-secondary);
+    font-size: 1.1em;
+    margin: 0 0 10px 0;
+}
+
+.bio {
+    color: var(--text-primary);
+    margin: 10px 0;
+    line-height: 1.5;
+}
+
+.profile-meta {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.profile-meta .meta-item {
+    color: var(--text-secondary);
+    font-size: 0.9em;
+    text-decoration: none;
+}
+
+.profile-meta .meta-item:hover {
+    color: var(--accent-primary);
+}
+
+.profile-nav {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 15px;
+}
+
+.nav-btn {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.nav-btn:hover {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+.nav-btn.active {
+    background: var(--accent-primary);
+    color: white;
+}
+
+.profile-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 25px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.recent-activity h3 {
+    margin-bottom: 15px;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.activity-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.activity-type {
+    background: var(--accent-primary);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    text-transform: uppercase;
+}
+
+.activity-content {
+    flex: 1;
+    color: var(--text-primary);
+}
+
+.activity-date {
+    color: var(--text-secondary);
+    font-size: 0.85em;
+}
+
+.no-activity {
+    color: var(--text-secondary);
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
+}

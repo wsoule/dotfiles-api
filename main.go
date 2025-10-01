@@ -44,16 +44,17 @@ type ShareMetadata struct {
 }
 
 type Template struct {
-	Taps      []string         `json:"taps"`
-	Brews     []string         `json:"brews"`
-	Casks     []string         `json:"casks"`
-	Stow      []string         `json:"stow"`
-	Metadata  ShareMetadata    `json:"metadata"`
-	Extends   string           `json:"extends,omitempty"`
-	Overrides []string         `json:"overrides,omitempty"`
-	AddOnly   bool             `json:"addOnly"`
-	Public    bool             `json:"public"`
-	Featured  bool             `json:"featured"`
+	Taps           []string         `json:"taps"`
+	Brews          []string         `json:"brews"`
+	Casks          []string         `json:"casks"`
+	Stow           []string         `json:"stow"`
+	Metadata       ShareMetadata    `json:"metadata"`
+	Extends        string           `json:"extends,omitempty"`
+	Overrides      []string         `json:"overrides,omitempty"`
+	AddOnly        bool             `json:"addOnly"`
+	Public         bool             `json:"public"`
+	Featured       bool             `json:"featured"`
+	OrganizationID string           `json:"organization_id,omitempty" bson:"organization_id,omitempty"`
 }
 
 type StoredTemplate struct {
@@ -110,6 +111,43 @@ type TemplateRating struct {
 	Distribution map[int]int `json:"distribution" bson:"distribution"` // rating -> count
 }
 
+// Organization models
+type Organization struct {
+	ID          string    `json:"id" bson:"_id"`
+	Name        string    `json:"name" bson:"name"`
+	Slug        string    `json:"slug" bson:"slug"` // URL-friendly name
+	Description string    `json:"description" bson:"description"`
+	Website     string    `json:"website" bson:"website"`
+	AvatarURL   string    `json:"avatar_url" bson:"avatar_url"`
+	OwnerID     string    `json:"owner_id" bson:"owner_id"`
+	Public      bool      `json:"public" bson:"public"`
+	CreatedAt   time.Time `json:"created_at" bson:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at" bson:"updated_at"`
+	MemberCount int       `json:"member_count" bson:"member_count"`
+}
+
+type OrganizationMember struct {
+	ID             string    `json:"id" bson:"_id"`
+	OrganizationID string    `json:"organization_id" bson:"organization_id"`
+	UserID         string    `json:"user_id" bson:"user_id"`
+	Username       string    `json:"username" bson:"username"`
+	Role           string    `json:"role" bson:"role"` // owner, admin, member
+	JoinedAt       time.Time `json:"joined_at" bson:"joined_at"`
+	InvitedBy      string    `json:"invited_by" bson:"invited_by"`
+}
+
+type OrganizationInvite struct {
+	ID             string    `json:"id" bson:"_id"`
+	OrganizationID string    `json:"organization_id" bson:"organization_id"`
+	InviterID      string    `json:"inviter_id" bson:"inviter_id"`
+	Email          string    `json:"email" bson:"email"`
+	Role           string    `json:"role" bson:"role"`
+	Token          string    `json:"token" bson:"token"`
+	ExpiresAt      time.Time `json:"expires_at" bson:"expires_at"`
+	CreatedAt      time.Time `json:"created_at" bson:"created_at"`
+	AcceptedAt     *time.Time `json:"accepted_at,omitempty" bson:"accepted_at,omitempty"`
+}
+
 // Storage interface
 type ConfigStorage interface {
 	Store(config *StoredConfig) error
@@ -150,13 +188,44 @@ type ReviewStorage interface {
 	UpdateTemplateRating(templateID string) error
 }
 
+// Organization storage interface
+type OrganizationStorage interface {
+	StoreOrganization(org *Organization) error
+	GetOrganization(id string) (*Organization, error)
+	GetOrganizationBySlug(slug string) (*Organization, error)
+	UpdateOrganization(org *Organization) error
+	DeleteOrganization(id string) error
+	GetUserOrganizations(userID string) ([]*Organization, error)
+	SearchOrganizations(query string, publicOnly bool) ([]*Organization, error)
+
+	// Member management
+	AddMember(member *OrganizationMember) error
+	RemoveMember(orgID, userID string) error
+	UpdateMemberRole(orgID, userID, role string) error
+	GetOrganizationMembers(orgID string) ([]*OrganizationMember, error)
+	GetUserMemberships(userID string) ([]*OrganizationMember, error)
+	IsUserMember(orgID, userID string) (bool, error)
+
+	// Invite management
+	CreateInvite(invite *OrganizationInvite) error
+	GetInvite(token string) (*OrganizationInvite, error)
+	AcceptInvite(token string, userID string) error
+	DeleteInvite(token string) error
+	GetOrganizationInvites(orgID string) ([]*OrganizationInvite, error)
+}
+
 // In-memory storage (fallback)
 type MemoryStorage struct {
-	configs   map[string]*StoredConfig
-	templates map[string]*StoredTemplate
-	users     map[string]*User
-	reviews   map[string]*Review
-	mu        sync.RWMutex
+	configs            map[string]*StoredConfig
+	templates          map[string]*StoredTemplate
+	users              map[string]*User
+	reviews            map[string]*Review
+	organizations      map[string]*Organization
+	orgMembers         map[string]*OrganizationMember
+	orgInvites         map[string]*OrganizationInvite
+	orgSlugIndex       map[string]string // slug -> org ID
+	userOrgIndex       map[string][]string // user ID -> org IDs
+	mu                 sync.RWMutex
 }
 
 // OAuth configuration
@@ -167,10 +236,15 @@ var (
 
 func NewMemoryStorage() *MemoryStorage {
 	return &MemoryStorage{
-		configs:   make(map[string]*StoredConfig),
-		templates: make(map[string]*StoredTemplate),
-		users:     make(map[string]*User),
-		reviews:   make(map[string]*Review),
+		configs:       make(map[string]*StoredConfig),
+		templates:     make(map[string]*StoredTemplate),
+		users:         make(map[string]*User),
+		reviews:       make(map[string]*Review),
+		organizations: make(map[string]*Organization),
+		orgMembers:    make(map[string]*OrganizationMember),
+		orgInvites:    make(map[string]*OrganizationInvite),
+		orgSlugIndex:  make(map[string]string),
+		userOrgIndex:  make(map[string][]string),
 	}
 }
 
@@ -504,6 +578,361 @@ func (m *MemoryStorage) UpdateTemplateRating(templateID string) error {
 	return nil
 }
 
+// Organization methods for MemoryStorage
+func (m *MemoryStorage) StoreOrganization(org *Organization) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.organizations[org.ID] = org
+	m.orgSlugIndex[org.Slug] = org.ID
+
+	// Add owner as first member
+	member := &OrganizationMember{
+		ID:             uuid.New().String(),
+		OrganizationID: org.ID,
+		UserID:         org.OwnerID,
+		Role:           "owner",
+		JoinedAt:       org.CreatedAt,
+		InvitedBy:      org.OwnerID,
+	}
+	m.orgMembers[member.ID] = member
+
+	// Update user org index
+	if userOrgs, exists := m.userOrgIndex[org.OwnerID]; exists {
+		m.userOrgIndex[org.OwnerID] = append(userOrgs, org.ID)
+	} else {
+		m.userOrgIndex[org.OwnerID] = []string{org.ID}
+	}
+
+	return nil
+}
+
+func (m *MemoryStorage) GetOrganization(id string) (*Organization, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	org, exists := m.organizations[id]
+	if !exists {
+		return nil, fmt.Errorf("organization not found")
+	}
+	return org, nil
+}
+
+func (m *MemoryStorage) GetOrganizationBySlug(slug string) (*Organization, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	orgID, exists := m.orgSlugIndex[slug]
+	if !exists {
+		return nil, fmt.Errorf("organization not found")
+	}
+
+	org, exists := m.organizations[orgID]
+	if !exists {
+		return nil, fmt.Errorf("organization not found")
+	}
+	return org, nil
+}
+
+func (m *MemoryStorage) UpdateOrganization(org *Organization) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if _, exists := m.organizations[org.ID]; !exists {
+		return fmt.Errorf("organization not found")
+	}
+
+	// Update slug index if changed
+	if existing := m.organizations[org.ID]; existing.Slug != org.Slug {
+		delete(m.orgSlugIndex, existing.Slug)
+		m.orgSlugIndex[org.Slug] = org.ID
+	}
+
+	org.UpdatedAt = time.Now()
+	m.organizations[org.ID] = org
+	return nil
+}
+
+func (m *MemoryStorage) DeleteOrganization(id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	org, exists := m.organizations[id]
+	if !exists {
+		return fmt.Errorf("organization not found")
+	}
+
+	// Remove from slug index
+	delete(m.orgSlugIndex, org.Slug)
+
+	// Remove all members
+	for memberID, member := range m.orgMembers {
+		if member.OrganizationID == id {
+			delete(m.orgMembers, memberID)
+		}
+	}
+
+	// Remove from user org indexes
+	for userID, orgList := range m.userOrgIndex {
+		for i, orgID := range orgList {
+			if orgID == id {
+				m.userOrgIndex[userID] = append(orgList[:i], orgList[i+1:]...)
+				break
+			}
+		}
+	}
+
+	delete(m.organizations, id)
+	return nil
+}
+
+func (m *MemoryStorage) GetUserOrganizations(userID string) ([]*Organization, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	orgIDs, exists := m.userOrgIndex[userID]
+	if !exists {
+		return []*Organization{}, nil
+	}
+
+	var orgs []*Organization
+	for _, orgID := range orgIDs {
+		if org, exists := m.organizations[orgID]; exists {
+			orgs = append(orgs, org)
+		}
+	}
+
+	return orgs, nil
+}
+
+func (m *MemoryStorage) SearchOrganizations(query string, publicOnly bool) ([]*Organization, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	var results []*Organization
+	queryLower := strings.ToLower(query)
+
+	for _, org := range m.organizations {
+		if publicOnly && !org.Public {
+			continue
+		}
+
+		searchText := strings.ToLower(org.Name + " " + org.Description)
+		if query == "" || strings.Contains(searchText, queryLower) {
+			results = append(results, org)
+		}
+	}
+
+	return results, nil
+}
+
+func (m *MemoryStorage) AddMember(member *OrganizationMember) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.orgMembers[member.ID] = member
+
+	// Update user org index
+	if userOrgs, exists := m.userOrgIndex[member.UserID]; exists {
+		// Check if already exists
+		for _, orgID := range userOrgs {
+			if orgID == member.OrganizationID {
+				return nil // Already a member
+			}
+		}
+		m.userOrgIndex[member.UserID] = append(userOrgs, member.OrganizationID)
+	} else {
+		m.userOrgIndex[member.UserID] = []string{member.OrganizationID}
+	}
+
+	// Update organization member count
+	if org, exists := m.organizations[member.OrganizationID]; exists {
+		org.MemberCount++
+		m.organizations[member.OrganizationID] = org
+	}
+
+	return nil
+}
+
+func (m *MemoryStorage) RemoveMember(orgID, userID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	// Find and remove member
+	var memberID string
+	for id, member := range m.orgMembers {
+		if member.OrganizationID == orgID && member.UserID == userID {
+			memberID = id
+			break
+		}
+	}
+
+	if memberID == "" {
+		return fmt.Errorf("member not found")
+	}
+
+	delete(m.orgMembers, memberID)
+
+	// Update user org index
+	if userOrgs, exists := m.userOrgIndex[userID]; exists {
+		for i, id := range userOrgs {
+			if id == orgID {
+				m.userOrgIndex[userID] = append(userOrgs[:i], userOrgs[i+1:]...)
+				break
+			}
+		}
+	}
+
+	// Update organization member count
+	if org, exists := m.organizations[orgID]; exists {
+		org.MemberCount--
+		m.organizations[orgID] = org
+	}
+
+	return nil
+}
+
+func (m *MemoryStorage) UpdateMemberRole(orgID, userID, role string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	for id, member := range m.orgMembers {
+		if member.OrganizationID == orgID && member.UserID == userID {
+			member.Role = role
+			m.orgMembers[id] = member
+			return nil
+		}
+	}
+
+	return fmt.Errorf("member not found")
+}
+
+func (m *MemoryStorage) GetOrganizationMembers(orgID string) ([]*OrganizationMember, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	var members []*OrganizationMember
+	for _, member := range m.orgMembers {
+		if member.OrganizationID == orgID {
+			members = append(members, member)
+		}
+	}
+
+	return members, nil
+}
+
+func (m *MemoryStorage) GetUserMemberships(userID string) ([]*OrganizationMember, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	var memberships []*OrganizationMember
+	for _, member := range m.orgMembers {
+		if member.UserID == userID {
+			memberships = append(memberships, member)
+		}
+	}
+
+	return memberships, nil
+}
+
+func (m *MemoryStorage) IsUserMember(orgID, userID string) (bool, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	for _, member := range m.orgMembers {
+		if member.OrganizationID == orgID && member.UserID == userID {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (m *MemoryStorage) CreateInvite(invite *OrganizationInvite) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.orgInvites[invite.Token] = invite
+	return nil
+}
+
+func (m *MemoryStorage) GetInvite(token string) (*OrganizationInvite, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	invite, exists := m.orgInvites[token]
+	if !exists {
+		return nil, fmt.Errorf("invite not found")
+	}
+
+	if time.Now().After(invite.ExpiresAt) {
+		return nil, fmt.Errorf("invite expired")
+	}
+
+	return invite, nil
+}
+
+func (m *MemoryStorage) AcceptInvite(token string, userID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	invite, exists := m.orgInvites[token]
+	if !exists {
+		return fmt.Errorf("invite not found")
+	}
+
+	if time.Now().After(invite.ExpiresAt) {
+		return fmt.Errorf("invite expired")
+	}
+
+	if invite.AcceptedAt != nil {
+		return fmt.Errorf("invite already accepted")
+	}
+
+	// Add as member
+	member := &OrganizationMember{
+		ID:             uuid.New().String(),
+		OrganizationID: invite.OrganizationID,
+		UserID:         userID,
+		Role:           invite.Role,
+		JoinedAt:       time.Now(),
+		InvitedBy:      invite.InviterID,
+	}
+
+	if err := m.AddMember(member); err != nil {
+		return err
+	}
+
+	// Mark invite as accepted
+	now := time.Now()
+	invite.AcceptedAt = &now
+	m.orgInvites[token] = invite
+
+	return nil
+}
+
+func (m *MemoryStorage) DeleteInvite(token string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	delete(m.orgInvites, token)
+	return nil
+}
+
+func (m *MemoryStorage) GetOrganizationInvites(orgID string) ([]*OrganizationInvite, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	var invites []*OrganizationInvite
+	for _, invite := range m.orgInvites {
+		if invite.OrganizationID == orgID && invite.AcceptedAt == nil {
+			invites = append(invites, invite)
+		}
+	}
+
+	return invites, nil
+}
+
 // MongoDB storage
 type MongoStorage struct {
 	collection         *mongo.Collection
@@ -792,10 +1221,102 @@ func (m *MongoStorage) UpdateTemplateRating(templateID string) error {
 	return fmt.Errorf("rating storage not implemented for MongoDB")
 }
 
+// Organization methods for MongoStorage - stub implementations
+func (m *MongoStorage) StoreOrganization(org *Organization) error {
+	// TODO: Implement MongoDB organization storage
+	return fmt.Errorf("organization storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) GetOrganization(id string) (*Organization, error) {
+	// TODO: Implement MongoDB organization retrieval
+	return nil, fmt.Errorf("organization storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) GetOrganizationBySlug(slug string) (*Organization, error) {
+	// TODO: Implement MongoDB organization retrieval by slug
+	return nil, fmt.Errorf("organization storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) UpdateOrganization(org *Organization) error {
+	// TODO: Implement MongoDB organization update
+	return fmt.Errorf("organization storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) DeleteOrganization(id string) error {
+	// TODO: Implement MongoDB organization deletion
+	return fmt.Errorf("organization storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) GetUserOrganizations(userID string) ([]*Organization, error) {
+	// TODO: Implement MongoDB user organizations retrieval
+	return nil, fmt.Errorf("organization storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) SearchOrganizations(query string, publicOnly bool) ([]*Organization, error) {
+	// TODO: Implement MongoDB organization search
+	return nil, fmt.Errorf("organization storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) AddMember(member *OrganizationMember) error {
+	// TODO: Implement MongoDB member addition
+	return fmt.Errorf("organization storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) RemoveMember(orgID, userID string) error {
+	// TODO: Implement MongoDB member removal
+	return fmt.Errorf("organization storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) UpdateMemberRole(orgID, userID, role string) error {
+	// TODO: Implement MongoDB member role update
+	return fmt.Errorf("organization storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) GetOrganizationMembers(orgID string) ([]*OrganizationMember, error) {
+	// TODO: Implement MongoDB organization members retrieval
+	return nil, fmt.Errorf("organization storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) GetUserMemberships(userID string) ([]*OrganizationMember, error) {
+	// TODO: Implement MongoDB user memberships retrieval
+	return nil, fmt.Errorf("organization storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) IsUserMember(orgID, userID string) (bool, error) {
+	// TODO: Implement MongoDB user membership check
+	return false, fmt.Errorf("organization storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) CreateInvite(invite *OrganizationInvite) error {
+	// TODO: Implement MongoDB invite creation
+	return fmt.Errorf("organization storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) GetInvite(token string) (*OrganizationInvite, error) {
+	// TODO: Implement MongoDB invite retrieval
+	return nil, fmt.Errorf("organization storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) AcceptInvite(token string, userID string) error {
+	// TODO: Implement MongoDB invite acceptance
+	return fmt.Errorf("organization storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) DeleteInvite(token string) error {
+	// TODO: Implement MongoDB invite deletion
+	return fmt.Errorf("organization storage not implemented for MongoDB")
+}
+
+func (m *MongoStorage) GetOrganizationInvites(orgID string) ([]*OrganizationInvite, error) {
+	// TODO: Implement MongoDB organization invites retrieval
+	return nil, fmt.Errorf("organization storage not implemented for MongoDB")
+}
+
 var storage ConfigStorage
 var templateStorage TemplateStorage
 var userStorage UserStorage
 var reviewStorage ReviewStorage
+var organizationStorage OrganizationStorage
 
 func seedTemplates() {
 	// Check if we already have templates
@@ -1043,6 +1564,7 @@ func main() {
 			templateStorage = mongoStorage
 			userStorage = mongoStorage
 			reviewStorage = mongoStorage
+			organizationStorage = mongoStorage
 			log.Println("Connected to MongoDB successfully")
 		}
 	} else {
@@ -1051,6 +1573,7 @@ func main() {
 		templateStorage = memStorage
 		userStorage = memStorage
 		reviewStorage = memStorage
+		organizationStorage = memStorage
 		log.Println("Using in-memory storage (set MONGODB_URI for persistent storage)")
 	}
 
@@ -1134,6 +1657,20 @@ func main() {
 		api.PUT("/reviews/:id", authRequired(), updateReview)
 		api.DELETE("/reviews/:id", authRequired(), deleteReview)
 		api.POST("/reviews/:id/helpful", authRequired(), markReviewHelpful)
+
+		// Organization endpoints
+		api.POST("/organizations", authRequired(), createOrganization)
+		api.GET("/organizations", getOrganizations)
+		api.GET("/organizations/:slug", getOrganizationBySlug)
+		api.PUT("/organizations/:slug", authRequired(), updateOrganization)
+		api.DELETE("/organizations/:slug", authRequired(), deleteOrganization)
+		api.GET("/organizations/:slug/members", getOrganizationMembers)
+		api.POST("/organizations/:slug/members", authRequired(), inviteMember)
+		api.DELETE("/organizations/:slug/members/:username", authRequired(), removeMember)
+		api.PUT("/organizations/:slug/members/:username", authRequired(), updateMemberRole)
+		api.GET("/organizations/:slug/invites", authRequired(), getOrganizationInvites)
+		api.POST("/invites/:token/accept", authRequired(), acceptInvite)
+		api.GET("/users/:username/organizations", getUserOrganizations)
 	}
 
 	// Web interface routes
@@ -1155,6 +1692,19 @@ func main() {
 	// Documentation page route
 	r.GET("/docs", func(c *gin.Context) {
 		c.File("./static/docs.html")
+	})
+
+	// Profile page routes (support both patterns)
+	r.GET("/profile/:username", func(c *gin.Context) {
+		c.File("./static/profile.html")
+	})
+	r.GET("/users/:username", func(c *gin.Context) {
+		c.File("./static/profile.html")
+	})
+
+	// Organizations page route
+	r.GET("/organizations", func(c *gin.Context) {
+		c.File("./static/organizations.html")
 	})
 
 	log.Printf("Server starting on port %s", port)
@@ -1334,6 +1884,37 @@ func createTemplate(c *gin.Context) {
 	if template.Metadata.Name == "" {
 		c.JSON(400, gin.H{"error": "Template name is required"})
 		return
+	}
+
+	// Get authenticated user if template is being assigned to an organization
+	var user *User
+	if template.OrganizationID != "" {
+		userID, err := c.Cookie("user_id")
+		if err != nil {
+			c.JSON(401, gin.H{"error": "Authentication required to assign template to organization"})
+			return
+		}
+
+		user, err = userStorage.GetUser(userID)
+		if err != nil {
+			c.JSON(401, gin.H{"error": "Invalid authentication"})
+			return
+		}
+
+		// Check if user is a member of the organization
+		isMember, err := organizationStorage.IsUserMember(template.OrganizationID, user.ID)
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Failed to verify organization membership"})
+			return
+		}
+
+		if !isMember {
+			c.JSON(403, gin.H{"error": "You must be a member of the organization to assign templates to it"})
+			return
+		}
+
+		// Set the template author to the authenticated user
+		template.Metadata.Author = user.Username
 	}
 
 	// Create stored template
@@ -1796,4 +2377,443 @@ func removeFromFavorites(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"message": "Removed from favorites"})
+}
+
+// Organization handlers
+func createOrganization(c *gin.Context) {
+	user := c.MustGet("user").(*User)
+
+	var req struct {
+		Name        string `json:"name" binding:"required"`
+		Slug        string `json:"slug" binding:"required"`
+		Description string `json:"description"`
+		Website     string `json:"website"`
+		Public      bool   `json:"public"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid request", "details": err.Error()})
+		return
+	}
+
+	// Check if slug is already taken
+	if _, err := organizationStorage.GetOrganizationBySlug(req.Slug); err == nil {
+		c.JSON(400, gin.H{"error": "Organization slug already exists"})
+		return
+	}
+
+	org := &Organization{
+		ID:          uuid.New().String(),
+		Name:        req.Name,
+		Slug:        req.Slug,
+		Description: req.Description,
+		Website:     req.Website,
+		OwnerID:     user.ID,
+		Public:      req.Public,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		MemberCount: 1,
+	}
+
+	if err := organizationStorage.StoreOrganization(org); err != nil {
+		c.JSON(500, gin.H{"error": "Failed to create organization"})
+		return
+	}
+
+	// Add the creator as the owner member
+	member := &OrganizationMember{
+		ID:             uuid.New().String(),
+		OrganizationID: org.ID,
+		UserID:         user.ID,
+		Role:           "owner",
+		JoinedAt:       time.Now(),
+	}
+
+	if err := organizationStorage.AddMember(member); err != nil {
+		c.JSON(500, gin.H{"error": "Failed to add creator as member"})
+		return
+	}
+
+	c.JSON(201, org)
+}
+
+func getOrganizations(c *gin.Context) {
+	query := c.Query("search")
+	publicOnly := c.Query("public") != "false"
+
+	orgs, err := organizationStorage.SearchOrganizations(query, publicOnly)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to get organizations"})
+		return
+	}
+
+	c.JSON(200, gin.H{"organizations": orgs})
+}
+
+func getUserOrganizations(c *gin.Context) {
+	username := c.Param("username")
+
+	// Get user by username
+	user, err := userStorage.GetUserByUsername(username)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Get user's organizations
+	orgs, err := organizationStorage.GetUserOrganizations(user.ID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to get user organizations"})
+		return
+	}
+
+	c.JSON(200, gin.H{"organizations": orgs})
+}
+
+func getOrganizationBySlug(c *gin.Context) {
+	slug := c.Param("slug")
+
+	org, err := organizationStorage.GetOrganizationBySlug(slug)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Organization not found"})
+		return
+	}
+
+	// Get members
+	members, err := organizationStorage.GetOrganizationMembers(org.ID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to get organization members"})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"organization": org,
+		"members":      members,
+	})
+}
+
+func updateOrganization(c *gin.Context) {
+	slug := c.Param("slug")
+	user := c.MustGet("user").(*User)
+
+	org, err := organizationStorage.GetOrganizationBySlug(slug)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Organization not found"})
+		return
+	}
+
+	// Check permissions (only owner can update)
+	if org.OwnerID != user.ID {
+		c.JSON(403, gin.H{"error": "Not authorized to update this organization"})
+		return
+	}
+
+	var req struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Website     string `json:"website"`
+		Public      bool   `json:"public"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid request", "details": err.Error()})
+		return
+	}
+
+	org.Name = req.Name
+	org.Description = req.Description
+	org.Website = req.Website
+	org.Public = req.Public
+
+	if err := organizationStorage.UpdateOrganization(org); err != nil {
+		c.JSON(500, gin.H{"error": "Failed to update organization"})
+		return
+	}
+
+	c.JSON(200, org)
+}
+
+func deleteOrganization(c *gin.Context) {
+	slug := c.Param("slug")
+	user := c.MustGet("user").(*User)
+
+	org, err := organizationStorage.GetOrganizationBySlug(slug)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Organization not found"})
+		return
+	}
+
+	// Check permissions (only owner can delete)
+	if org.OwnerID != user.ID {
+		c.JSON(403, gin.H{"error": "Not authorized to delete this organization"})
+		return
+	}
+
+	if err := organizationStorage.DeleteOrganization(org.ID); err != nil {
+		c.JSON(500, gin.H{"error": "Failed to delete organization"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Organization deleted successfully"})
+}
+
+func getOrganizationMembers(c *gin.Context) {
+	slug := c.Param("slug")
+
+	org, err := organizationStorage.GetOrganizationBySlug(slug)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Organization not found"})
+		return
+	}
+
+	members, err := organizationStorage.GetOrganizationMembers(org.ID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to get members"})
+		return
+	}
+
+	c.JSON(200, gin.H{"members": members})
+}
+
+func inviteMember(c *gin.Context) {
+	slug := c.Param("slug")
+	user := c.MustGet("user").(*User)
+
+	org, err := organizationStorage.GetOrganizationBySlug(slug)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Organization not found"})
+		return
+	}
+
+	// Check permissions (owner or admin can invite)
+	members, err := organizationStorage.GetOrganizationMembers(org.ID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to check permissions"})
+		return
+	}
+
+	canInvite := false
+	for _, member := range members {
+		if member.UserID == user.ID && (member.Role == "owner" || member.Role == "admin") {
+			canInvite = true
+			break
+		}
+	}
+
+	if !canInvite {
+		c.JSON(403, gin.H{"error": "Not authorized to invite members"})
+		return
+	}
+
+	var req struct {
+		Email string `json:"email" binding:"required"`
+		Role  string `json:"role" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid request", "details": err.Error()})
+		return
+	}
+
+	// Generate invite token
+	tokenBytes := make([]byte, 32)
+	rand.Read(tokenBytes)
+	token := base64.URLEncoding.EncodeToString(tokenBytes)
+
+	invite := &OrganizationInvite{
+		ID:             uuid.New().String(),
+		OrganizationID: org.ID,
+		InviterID:      user.ID,
+		Email:          req.Email,
+		Role:           req.Role,
+		Token:          token,
+		ExpiresAt:      time.Now().Add(7 * 24 * time.Hour), // 7 days
+		CreatedAt:      time.Now(),
+	}
+
+	if err := organizationStorage.CreateInvite(invite); err != nil {
+		c.JSON(500, gin.H{"error": "Failed to create invite"})
+		return
+	}
+
+	c.JSON(201, gin.H{
+		"invite": invite,
+		"invite_url": fmt.Sprintf("/invites/%s", token),
+	})
+}
+
+func removeMember(c *gin.Context) {
+	slug := c.Param("slug")
+	username := c.Param("username")
+	user := c.MustGet("user").(*User)
+
+	org, err := organizationStorage.GetOrganizationBySlug(slug)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Organization not found"})
+		return
+	}
+
+	// Get target user
+	targetUser, err := userStorage.GetUserByUsername(username)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Check permissions
+	members, err := organizationStorage.GetOrganizationMembers(org.ID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to check permissions"})
+		return
+	}
+
+	canRemove := false
+	isOwner := false
+	targetRole := ""
+
+	for _, member := range members {
+		if member.UserID == user.ID {
+			if member.Role == "owner" || member.Role == "admin" {
+				canRemove = true
+			}
+			if member.Role == "owner" {
+				isOwner = true
+			}
+		}
+		if member.UserID == targetUser.ID {
+			targetRole = member.Role
+		}
+	}
+
+	if !canRemove {
+		c.JSON(403, gin.H{"error": "Not authorized to remove members"})
+		return
+	}
+
+	// Owners cannot be removed, and only owners can remove admins
+	if targetRole == "owner" {
+		c.JSON(400, gin.H{"error": "Cannot remove organization owner"})
+		return
+	}
+
+	if targetRole == "admin" && !isOwner {
+		c.JSON(403, gin.H{"error": "Only owners can remove admins"})
+		return
+	}
+
+	if err := organizationStorage.RemoveMember(org.ID, targetUser.ID); err != nil {
+		c.JSON(500, gin.H{"error": "Failed to remove member"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Member removed successfully"})
+}
+
+func updateMemberRole(c *gin.Context) {
+	slug := c.Param("slug")
+	username := c.Param("username")
+	user := c.MustGet("user").(*User)
+
+	org, err := organizationStorage.GetOrganizationBySlug(slug)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Organization not found"})
+		return
+	}
+
+	// Get target user
+	targetUser, err := userStorage.GetUserByUsername(username)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "User not found"})
+		return
+	}
+
+	var req struct {
+		Role string `json:"role" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid request", "details": err.Error()})
+		return
+	}
+
+	// Check permissions (only owner can change roles)
+	if org.OwnerID != user.ID {
+		c.JSON(403, gin.H{"error": "Only organization owner can change member roles"})
+		return
+	}
+
+	// Cannot change owner role
+	if req.Role == "owner" {
+		c.JSON(400, gin.H{"error": "Cannot assign owner role"})
+		return
+	}
+
+	if err := organizationStorage.UpdateMemberRole(org.ID, targetUser.ID, req.Role); err != nil {
+		c.JSON(500, gin.H{"error": "Failed to update member role"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Member role updated successfully"})
+}
+
+func getOrganizationInvites(c *gin.Context) {
+	slug := c.Param("slug")
+	user := c.MustGet("user").(*User)
+
+	org, err := organizationStorage.GetOrganizationBySlug(slug)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Organization not found"})
+		return
+	}
+
+	// Check permissions
+	members, err := organizationStorage.GetOrganizationMembers(org.ID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to check permissions"})
+		return
+	}
+
+	canView := false
+	for _, member := range members {
+		if member.UserID == user.ID && (member.Role == "owner" || member.Role == "admin") {
+			canView = true
+			break
+		}
+	}
+
+	if !canView {
+		c.JSON(403, gin.H{"error": "Not authorized to view invites"})
+		return
+	}
+
+	invites, err := organizationStorage.GetOrganizationInvites(org.ID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to get invites"})
+		return
+	}
+
+	c.JSON(200, gin.H{"invites": invites})
+}
+
+func acceptInvite(c *gin.Context) {
+	token := c.Param("token")
+	user := c.MustGet("user").(*User)
+
+	invite, err := organizationStorage.GetInvite(token)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Invalid or expired invite"})
+		return
+	}
+
+	if err := organizationStorage.AcceptInvite(token, user.ID); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	org, _ := organizationStorage.GetOrganization(invite.OrganizationID)
+
+	c.JSON(200, gin.H{
+		"message": "Invite accepted successfully",
+		"organization": org,
+	})
 }

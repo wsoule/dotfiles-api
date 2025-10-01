@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizations - Dotfiles Manager</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/universal-header.css">
+</head>
+<body>
+    <!-- Universal Header -->
+    <header class="universal-header">
+        <div class="header-container">
+            <a href="/" class="header-brand">
+                Dotfiles Manager
+            </a>
+            <nav class="header-nav">
+                <a href="/">Home</a>
+                <a href="/templates">Templates</a>
+                <a href="/organizations" class="active">Organizations</a>
+                <a href="/docs">Documentation</a>
+            </nav>
+            <div class="header-attribution">
+                <div class="auth-section" id="auth-section">
+                    <div class="auth-loading" id="auth-loading">Loading...</div>
+                    <div class="auth-logged-out" id="auth-logged-out" style="display: none;">
+                        <a href="/auth/github" class="btn btn-primary btn-sm">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                            </svg>
+                            Sign in with GitHub
+                        </a>
+                    </div>
+                    <div class="auth-not-configured" id="auth-not-configured" style="display: none;">
+                        <span class="auth-message">Authentication not configured</span>
+                    </div>
+                    <div class="auth-logged-in" id="auth-logged-in" style="display: none;">
+                        <div class="user-menu">
+                            <img id="user-avatar" class="user-avatar" src="" alt="">
+                            <span id="user-name"></span>
+                            <div class="user-dropdown">
+                                <a href="#" id="user-profile-link">Profile</a>
+                                <a href="#" onclick="showMyOrganizations()">My Organizations</a>
+                                <a href="/auth/logout">Sign out</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="attribution-links">
+                    <span>Created by Wyat Soule</span>
+                    <a href="https://github.com/wsoule" target="_blank">GitHub</a>
+                    <a href="https://github.com/wsoule/go-dotfiles" target="_blank">Repository</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Organizations Header -->
+        <div class="organizations-header">
+            <div class="hero-content">
+                <div class="hero-badge">Community Organizations</div>
+                <h1 class="hero-title">
+                    Organizations
+                    <span class="hero-subtitle">Teams and communities building templates together</span>
+                </h1>
+                <p class="hero-description">
+                    Join organizations to collaborate on development environment templates, share resources with your team, and contribute to the broader developer community.
+                </p>
+            </div>
+        </div>
+
+        <!-- Search and Controls -->
+        <div class="organizations-controls">
+            <div class="search-box">
+                <input type="text" id="org-search" placeholder="Search organizations...">
+            </div>
+            <div class="control-actions">
+                <button class="btn btn-primary" onclick="showCreateOrganization()" id="create-org-btn" style="display: none;">
+                    Create Organization
+                </button>
+            </div>
+        </div>
+
+        <!-- Organizations Grid -->
+        <div class="organizations-section">
+            <div class="section-header">
+                <h2 id="organizations-section-title">All Organizations</h2>
+            </div>
+
+            <div id="organizations-container" class="organizations-grid">
+                <div class="loading">Loading organizations...</div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="organizations-empty" class="empty" style="display: none;">
+                <div class="empty-icon">🏢</div>
+                <h3>No organizations found</h3>
+                <p>Be the first to create an organization for your team or community.</p>
+                <button class="btn btn-primary" onclick="showCreateOrganization()">Create Organization</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Organization Modal -->
+    <div id="create-org-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create Organization</h2>
+                <button class="modal-close" onclick="closeCreateOrgModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="create-org-form">
+                    <div class="form-group">
+                        <label for="org-name">Organization Name</label>
+                        <input type="text" id="org-name" name="name" required placeholder="e.g., Acme Corp">
+                    </div>
+                    <div class="form-group">
+                        <label for="org-slug">URL Slug</label>
+                        <input type="text" id="org-slug" name="slug" required placeholder="e.g., acme-corp">
+                        <small>Used in URLs: /orgs/acme-corp</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="org-description">Description</label>
+                        <textarea id="org-description" name="description" rows="3" placeholder="Describe your organization..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="org-website">Website (Optional)</label>
+                        <input type="url" id="org-website" name="website" placeholder="https://example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="org-public" name="public" checked>
+                            Public Organization
+                        </label>
+                        <small>Public organizations are discoverable by all users</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCreateOrgModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createOrganization()">Create Organization</button>
+            </div>
+        </div>
+    </div>
+    <div id="create-org-overlay" class="modal-overlay" onclick="closeCreateOrgModal()" style="display: none;"></div>
+
+    <!-- Organization Detail Modal -->
+    <div id="org-detail-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="org-detail-title">Organization Details</h2>
+                <button class="modal-close" onclick="closeOrgDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="org-detail-body">
+                <!-- Organization details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeOrgDetailModal()">Close</button>
+                <button class="btn btn-primary" id="join-org-btn" onclick="joinOrganization()" style="display: none;">
+                    Request to Join
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="org-detail-overlay" class="modal-overlay" onclick="closeOrgDetailModal()" style="display: none;"></div>
+
+    <script>
+        let currentUser = null;
+        let allOrganizations = [];
+        let currentOrganization = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthStatus();
+            loadOrganizations();
+            setupEventListeners();
+        });
+
+        // Authentication functions
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch('/auth/user');
+                if (response.ok) {
+                    currentUser = await response.json();
+                    showLoggedInState();
+                } else {
+                    const data = await response.json();
+                    if (data.configured === false) {
+                        showAuthNotConfigured();
+                    } else {
+                        showLoggedOutState();
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to check auth status:', error);
+                showLoggedOutState();
+            }
+        }
+
+        function showLoggedInState() {
+            document.getElementById('auth-loading').style.display = 'none';
+            document.getElementById('auth-logged-out').style.display = 'none';
+            document.getElementById('auth-not-configured').style.display = 'none';
+            document.getElementById('auth-logged-in').style.display = 'block';
+            document.getElementById('create-org-btn').style.display = 'block';
+
+            document.getElementById('user-avatar').src = currentUser.avatar_url;
+            document.getElementById('user-name').textContent = currentUser.username;
+            document.getElementById('user-profile-link').href = `/profile/${currentUser.username}`;
+        }
+
+        function showLoggedOutState() {
+            document.getElementById('auth-loading').style.display = 'none';
+            document.getElementById('auth-logged-in').style.display = 'none';
+            document.getElementById('auth-not-configured').style.display = 'none';
+            document.getElementById('auth-logged-out').style.display = 'block';
+        }
+
+        function showAuthNotConfigured() {
+            document.getElementById('auth-loading').style.display = 'none';
+            document.getElementById('auth-logged-in').style.display = 'none';
+            document.getElementById('auth-logged-out').style.display = 'none';
+            document.getElementById('auth-not-configured').style.display = 'block';
+        }
+
+        function setupEventListeners() {
+            document.getElementById('org-search').addEventListener('input', filterOrganizations);
+
+            // Auto-generate slug from name
+            const nameInput = document.getElementById('org-name');
+            const slugInput = document.getElementById('org-slug');
+
+            if (nameInput && slugInput) {
+                nameInput.addEventListener('input', function() {
+                    const slug = this.value.toLowerCase()
+                        .replace(/[^a-z0-9]+/g, '-')
+                        .replace(/^-+|-+$/g, '');
+                    slugInput.value = slug;
+                });
+            }
+        }
+
+        async function loadOrganizations() {
+            try {
+                const response = await fetch('/api/organizations');
+                const data = await response.json();
+                allOrganizations = data.organizations || [];
+                displayOrganizations(allOrganizations);
+            } catch (error) {
+                console.error('Failed to load organizations:', error);
+                document.getElementById('organizations-container').innerHTML =
+                    '<div class="error">Failed to load organizations. Please try again later.</div>';
+            }
+        }
+
+        function filterOrganizations() {
+            const search = document.getElementById('org-search').value.toLowerCase();
+
+            const filtered = allOrganizations.filter(org => {
+                const searchText = (org.name + ' ' + org.description).toLowerCase();
+                return search === '' || searchText.includes(search);
+            });
+
+            displayOrganizations(filtered);
+            updateSectionTitle(filtered.length);
+        }
+
+        function displayOrganizations(organizations) {
+            const container = document.getElementById('organizations-container');
+            const emptyState = document.getElementById('organizations-empty');
+
+            if (organizations.length === 0) {
+                container.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            container.style.display = 'grid';
+            emptyState.style.display = 'none';
+
+            container.innerHTML = organizations.map(org => createOrganizationCard(org)).join('');
+        }
+
+        function createOrganizationCard(org) {
+            return `
+                <div class="organization-card" onclick="showOrganizationDetail('${org.slug}')">
+                    <div class="org-header">
+                        <div class="org-avatar">
+                            ${org.avatar_url ? `<img src="${org.avatar_url}" alt="${org.name}">` :
+                              `<div class="org-avatar-placeholder">${org.name.charAt(0).toUpperCase()}</div>`}
+                        </div>
+                        <div class="org-info">
+                            <h3>${org.name}</h3>
+                            <p class="org-slug">@${org.slug}</p>
+                        </div>
+                        ${!org.public ? '<span class="private-badge">Private</span>' : ''}
+                    </div>
+                    <div class="org-description">
+                        ${org.description || 'No description provided'}
+                    </div>
+                    <div class="org-stats">
+                        <span class="stat">
+                            <strong>${org.member_count || 0}</strong> member${(org.member_count || 0) !== 1 ? 's' : ''}
+                        </span>
+                        ${org.website ? `<a href="${org.website}" target="_blank" class="org-website" onclick="event.stopPropagation()">🔗 Website</a>` : ''}
+                    </div>
+                    <div class="org-footer">
+                        <span class="org-date">Created ${new Date(org.created_at).toLocaleDateString()}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateSectionTitle(count) {
+            const title = document.getElementById('organizations-section-title');
+            const search = document.getElementById('org-search').value;
+
+            if (search) {
+                title.textContent = `${count} Organization${count !== 1 ? 's' : ''} Found`;
+            } else {
+                title.textContent = 'All Organizations';
+            }
+        }
+
+        async function showOrganizationDetail(slug) {
+            try {
+                const response = await fetch(`/api/organizations/${slug}`);
+                const data = await response.json();
+                currentOrganization = data.organization;
+
+                document.getElementById('org-detail-title').textContent = currentOrganization.name;
+                document.getElementById('org-detail-body').innerHTML = generateOrganizationDetailHTML(currentOrganization, data.members);
+                document.getElementById('org-detail-modal').style.display = 'block';
+                document.getElementById('org-detail-overlay').style.display = 'block';
+
+                // Show join button if user is not a member
+                if (currentUser && !data.members.some(m => m.user_id === currentUser.id)) {
+                    document.getElementById('join-org-btn').style.display = 'block';
+                } else {
+                    document.getElementById('join-org-btn').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Failed to load organization details:', error);
+                alert('Failed to load organization details. Please try again.');
+            }
+        }
+
+        function generateOrganizationDetailHTML(org, members) {
+            return `
+                <div class="org-detail">
+                    <div class="org-info">
+                        <div class="org-meta">
+                            <span class="meta-item"><strong>Members:</strong> ${org.member_count || 0}</span>
+                            <span class="meta-item"><strong>Created:</strong> ${new Date(org.created_at).toLocaleDateString()}</span>
+                            <span class="meta-item"><strong>Visibility:</strong> ${org.public ? 'Public' : 'Private'}</span>
+                            ${org.website ? `<a href="${org.website}" target="_blank" class="meta-item">🔗 Website</a>` : ''}
+                        </div>
+
+                        <p class="org-description-full">${org.description || 'No description provided'}</p>
+                    </div>
+
+                    <div class="org-members">
+                        <h3>Members</h3>
+                        <div class="members-list">
+                            ${members.map(member => `
+                                <div class="member-item">
+                                    <span class="member-name">${member.username}</span>
+                                    <span class="member-role role-${member.role}">${member.role}</span>
+                                    <span class="member-date">Joined ${new Date(member.joined_at).toLocaleDateString()}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function closeOrganizationDetail() {
+            document.getElementById('org-detail-modal').style.display = 'none';
+            document.getElementById('org-detail-overlay').style.display = 'none';
+            currentOrganization = null;
+        }
+
+        // Organization management functions
+        function showCreateOrganization() {
+            if (!currentUser) {
+                alert('Please sign in to create an organization');
+                return;
+            }
+            document.getElementById('create-org-modal').style.display = 'block';
+            document.getElementById('create-org-overlay').style.display = 'block';
+        }
+
+        function closeCreateOrgModal() {
+            document.getElementById('create-org-modal').style.display = 'none';
+            document.getElementById('create-org-overlay').style.display = 'none';
+            document.getElementById('create-org-form').reset();
+        }
+
+        function closeOrgDetailModal() {
+            document.getElementById('org-detail-modal').style.display = 'none';
+            document.getElementById('org-detail-overlay').style.display = 'none';
+            currentOrganization = null;
+        }
+
+        async function createOrganization() {
+            const form = document.getElementById('create-org-form');
+            const formData = new FormData(form);
+
+            const orgData = {
+                name: formData.get('name'),
+                slug: formData.get('slug'),
+                description: formData.get('description'),
+                website: formData.get('website'),
+                public: formData.has('public')
+            };
+
+            try {
+                const response = await fetch('/api/organizations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(orgData)
+                });
+
+                if (response.ok) {
+                    const newOrg = await response.json();
+                    closeCreateOrgModal();
+                    loadOrganizations(); // Refresh the list
+                    alert('Organization created successfully!');
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Failed to create organization');
+                }
+            } catch (error) {
+                console.error('Failed to create organization:', error);
+                alert('Failed to create organization. Please try again.');
+            }
+        }
+
+        function showMyOrganizations() {
+            // Filter to show only organizations where current user is a member
+            // This would require additional API endpoint or filtering logic
+            document.getElementById('organizations-section-title').textContent = 'My Organizations';
+            // TODO: Implement filtering for user's organizations
+        }
+
+        function joinOrganization() {
+            alert('Organization join requests will be implemented with the invitation system');
+        }
+    </script>
+</body>
+</html>
