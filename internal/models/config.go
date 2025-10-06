@@ -18,11 +18,12 @@ type Config struct {
 
 // StoredConfig represents a config stored in the database
 type StoredConfig struct {
-	ID        string    `json:"id" bson:"_id"`
-	Config    Config    `json:"config" bson:"config"`
-	CreatedAt time.Time `json:"created_at" bson:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
-	Downloads int       `json:"downloads" bson:"downloads"`
+	ID            string          `json:"id" bson:"_id"`
+	Config        ShareableConfig `json:"config" bson:"config"`
+	Public        bool            `json:"public" bson:"public"`
+	CreatedAt     time.Time       `json:"created_at" bson:"created_at"`
+	DownloadCount int             `json:"download_count" bson:"download_count"`
+	OwnerID       string          `json:"owner_id" bson:"owner_id"`
 }
 
 // ConfigStats contains configuration statistics

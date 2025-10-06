@@ -2,8 +2,15 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"dotfiles-web/internal/models"
+)
+
+// Common repository errors
+var (
+	ErrNotFound      = errors.New("resource not found")
+	ErrAlreadyExists = errors.New("resource already exists")
 )
 
 type UserRepository interface {
@@ -11,6 +18,7 @@ type UserRepository interface {
 	GetByID(ctx context.Context, id string) (*models.User, error)
 	GetByUsername(ctx context.Context, username string) (*models.User, error)
 	GetByEmail(ctx context.Context, email string) (*models.User, error)
+	GetByGitHubID(ctx context.Context, githubID int) (*models.User, error)
 	Update(ctx context.Context, user *models.User) error
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context, limit, offset int) ([]*models.User, error)

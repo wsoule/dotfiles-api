@@ -4,17 +4,17 @@ import "time"
 
 // Template represents a dotfiles template
 type Template struct {
-	Taps           []string         `json:"taps" bson:"taps"`
-	Brews          []string         `json:"brews" bson:"brews"`
-	Casks          []string         `json:"casks" bson:"casks"`
-	Stow           []string         `json:"stow" bson:"stow"`
-	Metadata       TemplateMetadata `json:"metadata" bson:"metadata"`
-	Extends        string           `json:"extends" bson:"extends"`
-	Overrides      []string         `json:"overrides" bson:"overrides"`
-	AddOnly        bool             `json:"add_only" bson:"add_only"`
-	Public         bool             `json:"public" bson:"public"`
-	Featured       bool             `json:"featured" bson:"featured"`
-	OrganizationID string           `json:"organization_id" bson:"organization_id"`
+	Taps           []string      `json:"taps" bson:"taps"`
+	Brews          []string      `json:"brews" bson:"brews"`
+	Casks          []string      `json:"casks" bson:"casks"`
+	Stow           []string      `json:"stow" bson:"stow"`
+	Metadata       ShareMetadata `json:"metadata" bson:"metadata"`
+	Extends        string        `json:"extends,omitempty" bson:"extends"`
+	Overrides      []string      `json:"overrides,omitempty" bson:"overrides"`
+	AddOnly        bool          `json:"addOnly" bson:"add_only"`
+	Public         bool          `json:"public" bson:"public"`
+	Featured       bool          `json:"featured" bson:"featured"`
+	OrganizationID string        `json:"organization_id,omitempty" bson:"organization_id,omitempty"`
 }
 
 // TemplateMetadata contains template metadata

@@ -6,12 +6,26 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"dotfiles-web/pkg/errors"
+	"dotfiles-web/internal/auth"
 )
 
-func RequireAuth() gin.HandlerFunc {
+// AuthMiddleware holds the session manager
+type AuthMiddleware struct {
+	sessionManager *auth.SessionManager
+}
+
+// NewAuthMiddleware creates a new auth middleware
+func NewAuthMiddleware(sessionManager *auth.SessionManager) *AuthMiddleware {
+	return &AuthMiddleware{
+		sessionManager: sessionManager,
+	}
+}
+
+// RequireAuth middleware that requires authentication
+func (am *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		session := getSession(c)
-		if session == nil {
+		session, exists := am.sessionManager.GetSessionFromContext(c)
+		if !exists {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": errors.NewUnauthorizedError("authentication required"),
 			})
@@ -19,27 +33,24 @@ func RequireAuth() gin.HandlerFunc {
 			return
 		}
 
-		userID, exists := session["user_id"]
-		if !exists {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"error": errors.NewUnauthorizedError("invalid session"),
-			})
-			c.Abort()
-			return
-		}
-
-		c.Set("user_id", userID)
+		// Set user information in context
+		c.Set("user_id", session.UserID)
+		c.Set("username", session.Username)
+		c.Set("email", session.Email)
+		c.Set("session", session)
 		c.Next()
 	}
 }
 
-func OptionalAuth() gin.HandlerFunc {
+// OptionalAuth middleware that optionally sets user info if authenticated
+func (am *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		session := getSession(c)
-		if session != nil {
-			if userID, exists := session["user_id"]; exists {
-				c.Set("user_id", userID)
-			}
+		session, exists := am.sessionManager.GetSessionFromContext(c)
+		if exists {
+			c.Set("user_id", session.UserID)
+			c.Set("username", session.Username)
+			c.Set("email", session.Email)
+			c.Set("session", session)
 		}
 		c.Next()
 	}
@@ -131,19 +142,7 @@ func RequireOrganizationOwner() gin.HandlerFunc {
 	}
 }
 
-func getSession(c *gin.Context) map[string]interface{} {
-	sessionCookie, err := c.Request.Cookie("session")
-	if err != nil {
-		return nil
-	}
-
-	if sessionCookie.Value == "" {
-		return nil
-	}
-
-	return nil
-}
-
+// extractBearerToken extracts bearer token from authorization header
 func extractBearerToken(authHeader string) string {
 	if authHeader == "" {
 		return ""

@@ -81,6 +81,19 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.
 	return nil, errors.NewNotFoundError("user")
 }
 
+func (r *UserRepository) GetByGitHubID(ctx context.Context, githubID int) (*models.User, error) {
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+
+	for _, user := range r.users {
+		if user.GitHubID == githubID {
+			return user, nil
+		}
+	}
+
+	return nil, errors.NewNotFoundError("user")
+}
+
 func (r *UserRepository) Update(ctx context.Context, user *models.User) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
