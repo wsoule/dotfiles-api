@@ -2,19 +2,26 @@ package models
 
 import "time"
 
+// PackageConfig represents configuration for a specific package
+type PackageConfig struct {
+	PostInstall []string `json:"post_install,omitempty" bson:"post_install,omitempty"`
+	PreInstall  []string `json:"pre_install,omitempty" bson:"pre_install,omitempty"`
+}
+
 // Template represents a dotfiles template
 type Template struct {
-	Taps           []string      `json:"taps" bson:"taps"`
-	Brews          []string      `json:"brews" bson:"brews"`
-	Casks          []string      `json:"casks" bson:"casks"`
-	Stow           []string      `json:"stow" bson:"stow"`
-	Metadata       ShareMetadata `json:"metadata" bson:"metadata"`
-	Extends        string        `json:"extends,omitempty" bson:"extends"`
-	Overrides      []string      `json:"overrides,omitempty" bson:"overrides"`
-	AddOnly        bool          `json:"addOnly" bson:"add_only"`
-	Public         bool          `json:"public" bson:"public"`
-	Featured       bool          `json:"featured" bson:"featured"`
-	OrganizationID string        `json:"organization_id,omitempty" bson:"organization_id,omitempty"`
+	Taps           []string                 `json:"taps" bson:"taps"`
+	Brews          []string                 `json:"brews" bson:"brews"`
+	Casks          []string                 `json:"casks" bson:"casks"`
+	Stow           []string                 `json:"stow" bson:"stow"`
+	Metadata       ShareMetadata            `json:"metadata" bson:"metadata"`
+	Extends        string                   `json:"extends,omitempty" bson:"extends"`
+	Overrides      []string                 `json:"overrides,omitempty" bson:"overrides"`
+	AddOnly        bool                     `json:"addOnly" bson:"add_only"`
+	Public         bool                     `json:"public" bson:"public"`
+	Featured       bool                     `json:"featured" bson:"featured"`
+	OrganizationID string                   `json:"organization_id,omitempty" bson:"organization_id,omitempty"`
+	PackageConfigs map[string]PackageConfig `json:"package_configs,omitempty" bson:"package_configs,omitempty"`
 }
 
 // TemplateMetadata contains template metadata
