@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"dotfiles-web/internal/models"
-	"dotfiles-web/internal/repository"
+	"dotfiles-api/internal/models"
+	"dotfiles-api/internal/repository"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"

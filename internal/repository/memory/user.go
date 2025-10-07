@@ -5,8 +5,8 @@ import (
 	"sort"
 	"sync"
 
-	"dotfiles-web/internal/models"
-	"dotfiles-web/pkg/errors"
+	"dotfiles-api/internal/models"
+	"dotfiles-api/pkg/errors"
 )
 
 type UserRepository struct {

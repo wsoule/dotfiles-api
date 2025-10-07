@@ -5,9 +5,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"dotfiles-web/internal/dto"
-	"dotfiles-web/internal/repository"
-	"dotfiles-web/pkg/errors"
+	"dotfiles-api/internal/dto"
+	"dotfiles-api/internal/repository"
+	"dotfiles-api/pkg/errors"
 )
 
 type UserHandler struct {
@@ -297,5 +297,21 @@ func (h *UserHandler) GetFavorites(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"favorites": favorites,
+	})
+}
+
+func (h *UserHandler) GetUserOrganizations(c *gin.Context) {
+	username := c.Param("username")
+	if username == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": errors.NewBadRequestError("username is required"),
+		})
+		return
+	}
+
+	// TODO: Implement actual organization lookup when repository supports it
+	// For now, return empty array
+	c.JSON(http.StatusOK, gin.H{
+		"organizations": []interface{}{},
 	})
 }

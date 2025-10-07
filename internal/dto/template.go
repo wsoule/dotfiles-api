@@ -3,7 +3,7 @@ package dto
 import (
 	"strings"
 
-	"dotfiles-web/pkg/errors"
+	"dotfiles-api/pkg/errors"
 )
 
 type CreateTemplateRequest struct {

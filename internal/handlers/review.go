@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"time"
 
-	"dotfiles-web/internal/models"
-	"dotfiles-web/internal/repository"
-	"dotfiles-web/pkg/errors"
+	"dotfiles-api/internal/models"
+	"dotfiles-api/internal/repository"
+	"dotfiles-api/pkg/errors"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -25,8 +25,25 @@ func NewReviewHandler(reviewRepo repository.ReviewRepository) *ReviewHandler {
 	}
 }
 
+// isAvailable checks if the handler is available (has required dependencies)
+func (h *ReviewHandler) isAvailable() bool {
+	return h.reviewRepo != nil
+}
+
+// handleUnavailable returns an error response when the feature is not available
+func (h *ReviewHandler) handleUnavailable(c *gin.Context) {
+	c.JSON(http.StatusServiceUnavailable, gin.H{
+		"error": errors.NewBadRequestError("Review feature requires MongoDB. Please configure MONGODB_URI environment variable."),
+	})
+}
+
 // GetTemplateReviews handles getting reviews for a template
 func (h *ReviewHandler) GetTemplateReviews(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	templateID := c.Param("id")
 	if templateID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -68,6 +85,11 @@ func (h *ReviewHandler) GetTemplateReviews(c *gin.Context) {
 
 // CreateReview handles creating a new review
 func (h *ReviewHandler) CreateReview(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	templateID := c.Param("id")
 	if templateID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -138,6 +160,11 @@ func (h *ReviewHandler) CreateReview(c *gin.Context) {
 
 // GetTemplateRating handles getting template rating
 func (h *ReviewHandler) GetTemplateRating(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	templateID := c.Param("id")
 	if templateID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -159,6 +186,11 @@ func (h *ReviewHandler) GetTemplateRating(c *gin.Context) {
 
 // UpdateReview handles updating a review
 func (h *ReviewHandler) UpdateReview(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	reviewID := c.Param("id")
 	if reviewID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -231,6 +263,11 @@ func (h *ReviewHandler) UpdateReview(c *gin.Context) {
 
 // DeleteReview handles deleting a review
 func (h *ReviewHandler) DeleteReview(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	reviewID := c.Param("id")
 	if reviewID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -286,6 +323,11 @@ func (h *ReviewHandler) DeleteReview(c *gin.Context) {
 
 // MarkReviewHelpful handles marking a review as helpful
 func (h *ReviewHandler) MarkReviewHelpful(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	reviewID := c.Param("id")
 	if reviewID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{

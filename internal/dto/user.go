@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"dotfiles-web/pkg/errors"
+	"dotfiles-api/pkg/errors"
 )
 
 type CreateUserRequest struct {

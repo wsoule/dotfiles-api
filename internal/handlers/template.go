@@ -5,9 +5,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"dotfiles-web/internal/dto"
-	"dotfiles-web/internal/repository"
-	"dotfiles-web/pkg/errors"
+	"dotfiles-api/internal/dto"
+	"dotfiles-api/internal/repository"
+	"dotfiles-api/pkg/errors"
 )
 
 type TemplateHandler struct {

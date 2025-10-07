@@ -66,24 +66,22 @@ func (sm *SessionManager) CreateSession(userID, username, email string) (*Sessio
 
 // GetSession retrieves a session by ID
 func (sm *SessionManager) GetSession(sessionID string) (*Session, bool) {
-	sm.mutex.RLock()
-	session, exists := sm.sessions[sessionID]
-	sm.mutex.RUnlock()
+	sm.mutex.Lock()
+	defer sm.mutex.Unlock()
 
+	session, exists := sm.sessions[sessionID]
 	if !exists {
 		return nil, false
 	}
 
 	// Check if session is expired
 	if time.Now().After(session.ExpiresAt) {
-		sm.DeleteSession(sessionID)
+		delete(sm.sessions, sessionID)
 		return nil, false
 	}
 
-	// Extend session
-	sm.mutex.Lock()
+	// Extend session expiry
 	session.ExpiresAt = time.Now().Add(sm.timeout)
-	sm.mutex.Unlock()
 
 	return session, true
 }
@@ -120,26 +118,32 @@ func (sm *SessionManager) GetSessionFromContext(c *gin.Context) (*Session, bool)
 
 // SetSessionCookie sets the session cookie
 func (sm *SessionManager) SetSessionCookie(c *gin.Context, session *Session) {
+	// Determine if we're in production (HTTPS) or development
+	secure := c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https"
+
 	c.SetCookie(
 		"session_id",
 		session.ID,
 		int(sm.timeout.Seconds()),
 		"/",
 		"",
-		false, // secure (set to true in production with HTTPS)
-		true,  // httpOnly
+		secure, // secure flag - true in production with HTTPS
+		true,   // httpOnly
 	)
 }
 
 // ClearSessionCookie clears the session cookie
 func (sm *SessionManager) ClearSessionCookie(c *gin.Context) {
+	// Determine if we're in production (HTTPS) or development
+	secure := c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https"
+
 	c.SetCookie(
 		"session_id",
 		"",
 		-1,
 		"/",
 		"",
-		false,
+		secure,
 		true,
 	)
 }

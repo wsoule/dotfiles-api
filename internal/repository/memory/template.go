@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"dotfiles-web/internal/models"
-	"dotfiles-web/internal/repository"
+	"dotfiles-api/internal/models"
+	"dotfiles-api/internal/repository"
 )
 
 type TemplateRepository struct {

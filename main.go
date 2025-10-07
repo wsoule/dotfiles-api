@@ -5,18 +5,23 @@ import (
 	"os"
 	"time"
 
-	"dotfiles-web/internal/auth"
-	"dotfiles-web/internal/handlers"
-	"dotfiles-web/internal/middleware"
-	"dotfiles-web/internal/repository"
-	"dotfiles-web/internal/repository/memory"
-	"dotfiles-web/internal/repository/mongo"
-	"dotfiles-web/internal/router"
+	"dotfiles-api/internal/auth"
+	"dotfiles-api/internal/handlers"
+	"dotfiles-api/internal/middleware"
+	"dotfiles-api/internal/repository"
+	"dotfiles-api/internal/repository/memory"
+	"dotfiles-api/internal/repository/mongo"
+	"dotfiles-api/internal/router"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load .env file if it exists (for local development)
+	// Silently ignore if .env doesn't exist (production uses environment variables)
+	_ = godotenv.Load()
+
 	// Initialize OAuth service
 	oauthService := auth.NewOAuthService()
 
@@ -90,6 +95,9 @@ func main() {
 
 	// Initialize Gin
 	r := gin.Default()
+
+	// Trust Railway's proxy infrastructure
+	r.SetTrustedProxies(nil)
 
 	// Add logging middleware
 	r.Use(middleware.Logger())

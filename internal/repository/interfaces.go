@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"dotfiles-web/internal/models"
+	"dotfiles-api/internal/models"
 )
 
 // Common repository errors

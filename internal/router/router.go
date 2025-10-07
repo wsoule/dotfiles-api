@@ -1,8 +1,8 @@
 package router
 
 import (
-	"dotfiles-web/internal/handlers"
-	"dotfiles-web/internal/middleware"
+	"dotfiles-api/internal/handlers"
+	"dotfiles-api/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -117,7 +117,7 @@ func (router *Router) SetupRoutes(r *gin.Engine) {
 		api.PUT("/organizations/:slug/members/:username", router.authMiddleware.RequireAuth(), router.organizationHandler.UpdateMemberRole)
 		api.GET("/organizations/:slug/invites", router.authMiddleware.RequireAuth(), router.organizationHandler.GetOrganizationInvites)
 		api.POST("/invites/:token/accept", router.authMiddleware.RequireAuth(), router.organizationHandler.AcceptInvite)
-		api.GET("/users/:username/organizations", router.userHandler.GetUserByUsername)
+		api.GET("/users/:username/organizations", router.userHandler.GetUserOrganizations)
 	}
 
 	// API documentation endpoint

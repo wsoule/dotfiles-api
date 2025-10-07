@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"dotfiles-web/internal/models"
-	"dotfiles-web/internal/repository"
-	"dotfiles-web/pkg/errors"
+	"dotfiles-api/internal/models"
+	"dotfiles-api/internal/repository"
+	"dotfiles-api/pkg/errors"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -26,8 +26,25 @@ func NewOrganizationHandler(orgRepo repository.OrganizationRepository) *Organiza
 	}
 }
 
+// isAvailable checks if the handler is available (has required dependencies)
+func (h *OrganizationHandler) isAvailable() bool {
+	return h.orgRepo != nil
+}
+
+// handleUnavailable returns an error response when the feature is not available
+func (h *OrganizationHandler) handleUnavailable(c *gin.Context) {
+	c.JSON(http.StatusServiceUnavailable, gin.H{
+		"error": errors.NewBadRequestError("Organization feature requires MongoDB. Please configure MONGODB_URI environment variable."),
+	})
+}
+
 // CreateOrganization handles creating a new organization
 func (h *OrganizationHandler) CreateOrganization(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	// Get user ID from context
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -104,6 +121,11 @@ func (h *OrganizationHandler) CreateOrganization(c *gin.Context) {
 
 // GetOrganizations handles getting all organizations
 func (h *OrganizationHandler) GetOrganizations(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	limitStr := c.DefaultQuery("limit", "10")
 	offsetStr := c.DefaultQuery("offset", "0")
 
@@ -137,6 +159,11 @@ func (h *OrganizationHandler) GetOrganizations(c *gin.Context) {
 
 // GetOrganizationBySlug handles getting organization by slug
 func (h *OrganizationHandler) GetOrganizationBySlug(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	slug := c.Param("slug")
 	if slug == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -165,40 +192,80 @@ func (h *OrganizationHandler) GetOrganizationBySlug(c *gin.Context) {
 
 // UpdateOrganization handles updating an organization
 func (h *OrganizationHandler) UpdateOrganization(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	c.JSON(http.StatusNotImplemented, gin.H{"error": "not implemented yet"})
 }
 
 // DeleteOrganization handles deleting an organization
 func (h *OrganizationHandler) DeleteOrganization(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	c.JSON(http.StatusNotImplemented, gin.H{"error": "not implemented yet"})
 }
 
 // GetOrganizationMembers handles getting organization members
 func (h *OrganizationHandler) GetOrganizationMembers(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	c.JSON(http.StatusNotImplemented, gin.H{"error": "not implemented yet"})
 }
 
 // InviteMember handles inviting a member to organization
 func (h *OrganizationHandler) InviteMember(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	c.JSON(http.StatusNotImplemented, gin.H{"error": "not implemented yet"})
 }
 
 // RemoveMember handles removing a member from organization
 func (h *OrganizationHandler) RemoveMember(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	c.JSON(http.StatusNotImplemented, gin.H{"error": "not implemented yet"})
 }
 
 // UpdateMemberRole handles updating member role
 func (h *OrganizationHandler) UpdateMemberRole(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	c.JSON(http.StatusNotImplemented, gin.H{"error": "not implemented yet"})
 }
 
 // GetOrganizationInvites handles getting organization invites
 func (h *OrganizationHandler) GetOrganizationInvites(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	c.JSON(http.StatusNotImplemented, gin.H{"error": "not implemented yet"})
 }
 
 // AcceptInvite handles accepting an organization invite
 func (h *OrganizationHandler) AcceptInvite(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	c.JSON(http.StatusNotImplemented, gin.H{"error": "not implemented yet"})
 }

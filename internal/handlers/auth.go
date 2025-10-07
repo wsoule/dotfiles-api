@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"dotfiles-web/internal/auth"
-	"dotfiles-web/internal/models"
-	"dotfiles-web/internal/repository"
-	"dotfiles-web/pkg/errors"
+	"dotfiles-api/internal/auth"
+	"dotfiles-api/internal/models"
+	"dotfiles-api/internal/repository"
+	"dotfiles-api/pkg/errors"
 
 	"github.com/gin-gonic/gin"
 )
@@ -40,7 +40,14 @@ func (h *AuthHandler) GitHubLogin(c *gin.Context) {
 		return
 	}
 
-	url := h.oauthService.GetAuthURL()
+	url, err := h.oauthService.GetAuthURL()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": errors.NewInternalError("Failed to generate OAuth URL", err),
+		})
+		return
+	}
+
 	c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
@@ -55,7 +62,7 @@ func (h *AuthHandler) GitHubCallback(c *gin.Context) {
 	}
 
 	code := c.Query("code")
-	token, err := h.oauthService.ExchangeCode(code)
+	token, err := h.oauthService.ExchangeCode(c.Request.Context(), code)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": errors.NewBadRequestError("Failed to exchange OAuth code"),
@@ -64,7 +71,7 @@ func (h *AuthHandler) GitHubCallback(c *gin.Context) {
 	}
 
 	// Get user info from GitHub
-	client := h.oauthService.GetClient(token)
+	client := h.oauthService.GetClient(c.Request.Context(), token)
 	resp, err := client.Get("https://api.github.com/user")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -95,10 +102,15 @@ func (h *AuthHandler) GitHubCallback(c *gin.Context) {
 	// Check if user already exists
 	user, err := h.userRepo.GetByGitHubID(c.Request.Context(), githubUser.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": errors.NewInternalError("Failed to check existing user", err),
-		})
-		return
+		// If it's not a "not found" error, then it's a real error
+		if appErr, ok := err.(*errors.AppError); !ok || appErr.Code != "NOT_FOUND" {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": errors.NewInternalError("Failed to check existing user", err),
+			})
+			return
+		}
+		// User doesn't exist yet, that's fine - we'll create them below
+		user = nil
 	}
 
 	// Create or update user

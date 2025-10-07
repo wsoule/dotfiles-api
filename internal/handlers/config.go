@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"dotfiles-web/internal/models"
-	"dotfiles-web/internal/repository"
-	"dotfiles-web/pkg/errors"
+	"dotfiles-api/internal/models"
+	"dotfiles-api/internal/repository"
+	"dotfiles-api/pkg/errors"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -26,8 +26,25 @@ func NewConfigHandler(configRepo repository.ConfigRepository) *ConfigHandler {
 	}
 }
 
+// isAvailable checks if the handler is available (has required dependencies)
+func (h *ConfigHandler) isAvailable() bool {
+	return h.configRepo != nil
+}
+
+// handleUnavailable returns an error response when the feature is not available
+func (h *ConfigHandler) handleUnavailable(c *gin.Context) {
+	c.JSON(http.StatusServiceUnavailable, gin.H{
+		"error": errors.NewBadRequestError("Config feature requires MongoDB. Please configure MONGODB_URI environment variable."),
+	})
+}
+
 // UploadConfig handles config upload
 func (h *ConfigHandler) UploadConfig(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	var shareableConfig models.ShareableConfig
 	if err := c.ShouldBindJSON(&shareableConfig); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -89,6 +106,11 @@ func (h *ConfigHandler) UploadConfig(c *gin.Context) {
 
 // GetConfig handles getting a config by ID
 func (h *ConfigHandler) GetConfig(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	id := c.Param("id")
 	if id == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -117,6 +139,11 @@ func (h *ConfigHandler) GetConfig(c *gin.Context) {
 
 // DownloadConfig handles config download
 func (h *ConfigHandler) DownloadConfig(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	id := c.Param("id")
 	if id == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -153,6 +180,11 @@ func (h *ConfigHandler) DownloadConfig(c *gin.Context) {
 
 // SearchConfigs handles config search
 func (h *ConfigHandler) SearchConfigs(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	query := c.Query("q")
 	if query == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -211,6 +243,11 @@ func (h *ConfigHandler) SearchConfigs(c *gin.Context) {
 
 // GetFeaturedConfigs handles getting featured configs
 func (h *ConfigHandler) GetFeaturedConfigs(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	limitStr := c.DefaultQuery("limit", "10")
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil || limit <= 0 {
@@ -238,6 +275,11 @@ func (h *ConfigHandler) GetFeaturedConfigs(c *gin.Context) {
 
 // GetStats handles getting config statistics
 func (h *ConfigHandler) GetStats(c *gin.Context) {
+	if !h.isAvailable() {
+		h.handleUnavailable(c)
+		return
+	}
+
 	stats, err := h.configRepo.GetStats(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{

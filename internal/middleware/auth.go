@@ -2,11 +2,10 @@ package middleware
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
-	"dotfiles-web/pkg/errors"
-	"dotfiles-web/internal/auth"
+	"dotfiles-api/pkg/errors"
+	"dotfiles-api/internal/auth"
 )
 
 // AuthMiddleware holds the session manager
@@ -140,18 +139,4 @@ func RequireOrganizationOwner() gin.HandlerFunc {
 
 		c.Next()
 	}
-}
-
-// extractBearerToken extracts bearer token from authorization header
-func extractBearerToken(authHeader string) string {
-	if authHeader == "" {
-		return ""
-	}
-
-	parts := strings.Split(authHeader, " ")
-	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-		return ""
-	}
-
-	return parts[1]
 }

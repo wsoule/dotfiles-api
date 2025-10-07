@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"dotfiles-web/pkg/errors"
+	"dotfiles-api/pkg/errors"
 )
 
 type RateLimiter struct {
