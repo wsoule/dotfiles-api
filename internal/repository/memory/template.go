@@ -53,8 +53,6 @@ func (r *TemplateRepository) initSampleTemplates() {
 					Author:      "Dotfiles Manager",
 					Version:     "1.0.0",
 					Tags:        []string{"essential", "developer", "productivity", "shell", "cli"},
-					CreatedAt:   now.Format(time.RFC3339),
-					UpdatedAt:   now.Format(time.RFC3339),
 				},
 				Public:   true,
 				Featured: true,
