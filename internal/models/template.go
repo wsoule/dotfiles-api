@@ -8,6 +8,16 @@ type PackageConfig struct {
 	PreInstall  []string `json:"pre_install,omitempty" bson:"pre_install,omitempty"`
 }
 
+// Hooks represents global lifecycle hooks
+type Hooks struct {
+	PreInstall  []string `json:"pre_install,omitempty" bson:"pre_install,omitempty"`
+	PostInstall []string `json:"post_install,omitempty" bson:"post_install,omitempty"`
+	PreSync     []string `json:"pre_sync,omitempty" bson:"pre_sync,omitempty"`
+	PostSync    []string `json:"post_sync,omitempty" bson:"post_sync,omitempty"`
+	PreStow     []string `json:"pre_stow,omitempty" bson:"pre_stow,omitempty"`
+	PostStow    []string `json:"post_stow,omitempty" bson:"post_stow,omitempty"`
+}
+
 // Template represents a dotfiles template
 type Template struct {
 	Taps           []string                 `json:"taps" bson:"taps"`
@@ -21,6 +31,7 @@ type Template struct {
 	Public         bool                     `json:"public" bson:"public"`
 	Featured       bool                     `json:"featured" bson:"featured"`
 	OrganizationID string                   `json:"organization_id,omitempty" bson:"organization_id,omitempty"`
+	Hooks          *Hooks                   `json:"hooks,omitempty" bson:"hooks,omitempty"`
 	PackageConfigs map[string]PackageConfig `json:"package_configs,omitempty" bson:"package_configs,omitempty"`
 }
 

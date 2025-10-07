@@ -56,6 +56,20 @@ func (r *TemplateRepository) initSampleTemplates() {
 				},
 				Public:   true,
 				Featured: true,
+				Hooks: &models.Hooks{
+					PreInstall: []string{
+						"brew update",
+					},
+					PostInstall: []string{
+						"echo '✅ Installation complete! Run dotfiles stow to symlink your config files.'",
+					},
+					PreStow: []string{
+						"echo '🔗 Creating symlinks...'",
+					},
+					PostStow: []string{
+						"echo '✅ Dotfiles stowed successfully!'",
+					},
+				},
 				PackageConfigs: map[string]models.PackageConfig{
 					"starship": {
 						PostInstall: []string{
