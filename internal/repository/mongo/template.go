@@ -19,9 +19,91 @@ type TemplateRepository struct {
 
 // NewTemplateRepository creates a new template repository
 func NewTemplateRepository(client *Client) *TemplateRepository {
-	return &TemplateRepository{
+	repo := &TemplateRepository{
 		collection: client.Collection("templates"),
 	}
+
+	// Seed with default template if collection is empty
+	repo.seedDefaultTemplate()
+
+	return repo
+}
+
+// seedDefaultTemplate adds the essential developer setup template if no templates exist
+func (r *TemplateRepository) seedDefaultTemplate() {
+	ctx := context.Background()
+
+	// Check if any templates exist
+	count, err := r.collection.CountDocuments(ctx, bson.M{})
+	if err != nil || count > 0 {
+		return // Don't seed if templates already exist
+	}
+
+	now := time.Now()
+	defaultTemplate := &models.StoredTemplate{
+		ID: "essential-developer-setup",
+		Template: models.Template{
+			Taps: []string{
+				"homebrew/cask-fonts",
+			},
+			Brews: []string{
+				"git", "curl", "wget", "tree", "jq", "stow", "gh",
+				"starship", "neovim", "tmux", "fzf", "ripgrep",
+				"bat", "eza", "zoxide",
+			},
+			Casks: []string{
+				"visual-studio-code", "ghostty", "raycast",
+				"rectangle", "obsidian", "1password",
+				"font-jetbrains-mono-nerd-font",
+			},
+			Stow: []string{"vim", "zsh", "tmux", "starship", "git"},
+			Metadata: models.ShareMetadata{
+				Name:        "Essential Developer Setup",
+				Description: "Complete modern developer setup with CLI tools, shell enhancements, and essential apps with automated post-install configuration",
+				Author:      "Dotfiles Manager",
+				Version:     "1.0.0",
+				Tags:        []string{"essential", "developer", "productivity", "shell", "cli"},
+			},
+			Public:   true,
+			Featured: true,
+			PackageConfigs: map[string]models.PackageConfig{
+				"starship": {
+					PostInstall: []string{
+						"echo 'eval \"$(starship init bash)\"' >> ~/.bashrc",
+						"echo 'eval \"$(starship init zsh)\"' >> ~/.zshrc",
+					},
+				},
+				"zoxide": {
+					PostInstall: []string{
+						"echo 'eval \"$(zoxide init bash)\"' >> ~/.bashrc",
+						"echo 'eval \"$(zoxide init zsh)\"' >> ~/.zshrc",
+					},
+				},
+				"fzf": {
+					PostInstall: []string{
+						"$(brew --prefix)/opt/fzf/install --key-bindings --completion --no-update-rc",
+					},
+				},
+				"neovim": {
+					PostInstall: []string{
+						"mkdir -p ~/.config/nvim",
+						"echo '-- Neovim configuration will be managed via stow' > ~/.config/nvim/init.lua",
+					},
+				},
+				"tmux": {
+					PostInstall: []string{
+						"git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm || echo 'TPM already installed'",
+					},
+				},
+			},
+		},
+		Downloads: 0,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	// Insert the default template
+	_, _ = r.collection.InsertOne(ctx, defaultTemplate)
 }
 
 // Create stores a new template
