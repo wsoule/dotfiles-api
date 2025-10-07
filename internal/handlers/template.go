@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"dotfiles-api/internal/dto"
+	"dotfiles-api/internal/models"
 	"dotfiles-api/internal/repository"
 	"dotfiles-api/pkg/errors"
 )
@@ -34,9 +35,65 @@ func (h *TemplateHandler) CreateTemplate(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "Template created successfully",
-	})
+	// Create StoredTemplate from request
+	storedTemplate := &models.StoredTemplate{
+		Template: models.Template{
+			Taps:           req.Taps,
+			Brews:          req.Brews,
+			Casks:          req.Casks,
+			Stow:           req.Stow,
+			Extends:        req.Extends,
+			Overrides:      req.Overrides,
+			AddOnly:        req.AddOnly,
+			Public:         req.Public,
+			Featured:       req.Featured,
+			OrganizationID: req.OrganizationID,
+			Metadata: models.ShareMetadata{
+				Name:        req.Metadata.Name,
+				Description: req.Metadata.Description,
+				Author:      req.Metadata.Author,
+				Version:     req.Metadata.Version,
+				Tags:        req.Metadata.Tags,
+			},
+		},
+	}
+
+	// Save template to repository
+	if err := h.templateRepo.Create(c.Request.Context(), storedTemplate); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": errors.NewInternalError("failed to create template", err),
+		})
+		return
+	}
+
+	// Return created template
+	response := &dto.TemplateResponse{
+		ID:             storedTemplate.ID,
+		Taps:           storedTemplate.Template.Taps,
+		Brews:          storedTemplate.Template.Brews,
+		Casks:          storedTemplate.Template.Casks,
+		Stow:           storedTemplate.Template.Stow,
+		Extends:        storedTemplate.Template.Extends,
+		Overrides:      storedTemplate.Template.Overrides,
+		AddOnly:        storedTemplate.Template.AddOnly,
+		Public:         storedTemplate.Template.Public,
+		Featured:       storedTemplate.Template.Featured,
+		OrganizationID: storedTemplate.Template.OrganizationID,
+		Downloads:      storedTemplate.Downloads,
+		CreatedAt:      storedTemplate.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		UpdatedAt:      storedTemplate.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		Metadata: dto.TemplateMetadataResponse{
+			Name:        storedTemplate.Template.Metadata.Name,
+			Description: storedTemplate.Template.Metadata.Description,
+			Author:      storedTemplate.Template.Metadata.Author,
+			Version:     storedTemplate.Template.Metadata.Version,
+			Tags:        storedTemplate.Template.Metadata.Tags,
+			CreatedAt:   storedTemplate.Template.Metadata.CreatedAt.Format("2006-01-02T15:04:05Z"),
+			UpdatedAt:   storedTemplate.Template.Metadata.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		},
+	}
+
+	c.JSON(http.StatusCreated, response)
 }
 
 func (h *TemplateHandler) GetTemplate(c *gin.Context) {
