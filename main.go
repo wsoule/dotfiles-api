@@ -67,8 +67,9 @@ func main() {
 		// Use in-memory repositories as fallback
 		templateRepo = memory.NewTemplateRepository()
 		userRepo = memory.NewUserRepository()
+		reviewRepo = memory.NewReviewRepository()
 		log.Println("Using in-memory repositories (MongoDB not configured)")
-		log.Println("Note: Some features (config, reviews, organizations) are not available without MongoDB")
+		log.Println("Note: Some features (config, organizations) are not available without MongoDB")
 	}
 
 	// Initialize auth middleware
